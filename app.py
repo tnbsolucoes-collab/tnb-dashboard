@@ -48,6 +48,14 @@ def init_db():
       user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
       monthly_goal NUMERIC(12,2) NOT NULL DEFAULT 10000
     );
+    CREATE TABLE IF NOT EXISTS integrations(
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      platform VARCHAR(80) NOT NULL,
+      status VARCHAR(30) NOT NULL DEFAULT 'not_connected',
+      created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+      UNIQUE(user_id, platform)
+    );
     """)
     conn.commit()
     cur.close()
@@ -77,13 +85,14 @@ BASE_STYLE = """
 :root{--bg:#07090a;--card:#101516;--line:#203033;--text:#f4f7f6;--muted:#8e9a98;--green:#28e59b;--cyan:#35d8e6;--danger:#ff6474}
 *{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,Arial;background:radial-gradient(circle at top right,#102326 0,#07090a 38%);color:var(--text);min-height:100vh}
 a{color:inherit}.app{display:grid;grid-template-columns:230px 1fr;min-height:100vh}.side{border-right:1px solid var(--line);padding:28px 20px;background:#090d0e}
-.logo{font-weight:900;font-size:22px}.logo span{color:var(--green)}.muted{color:var(--muted)}nav a{display:block;margin:9px 0;padding:13px;border-radius:12px;text-decoration:none;color:#b8c2c0}nav a:hover{background:#13201e;color:var(--green)}
+.logo{font-weight:900;font-size:22px}.logo span{color:var(--green)}.muted{color:var(--muted)}nav a{display:block;margin:9px 0;padding:13px;border-radius:12px;text-decoration:none;color:#b8c2c0}nav a:hover{background:#13201e;color:var(--green);transform:translateX(3px)}nav a{transition:.2s ease}
 main{padding:30px;max-width:1400px;width:100%}.top{display:flex;justify-content:space-between;gap:15px;align-items:center}.top h1{margin:0;font-size:28px}.btn{display:inline-block;border:0;border-radius:12px;padding:12px 16px;font-weight:800;background:var(--green);color:#042116;cursor:pointer;text-decoration:none}
 .btn.secondary{background:#253032;color:white}.btn.danger{background:#3a1b20;color:#ff8a96}.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin:25px 0}.card,.panel{background:linear-gradient(145deg,#111718,#0d1213);border:1px solid var(--line);border-radius:18px;padding:20px;box-shadow:0 15px 40px #0005}
 .card label{color:var(--muted);font-size:13px}.value{font-size:27px;font-weight:900;margin-top:8px}.up{font-size:12px;color:var(--green);margin-top:6px}.grid{display:grid;grid-template-columns:2fr 1fr;gap:16px}
 input,select{width:100%;padding:12px;margin:7px 0 13px;border-radius:10px;border:1px solid #2b383a;background:#080c0d;color:white}.sale{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid #1b2425}.sale b{color:var(--green)}
 .goal{height:11px;background:#1a2223;border-radius:20px;overflow:hidden}.goal i{display:block;height:100%;background:linear-gradient(90deg,var(--green),var(--cyan))}
 .auth{max-width:430px;margin:8vh auto;padding:28px}.auth .logo{text-align:center;margin-bottom:24px}.flash{padding:12px;border:1px solid #5c3b3f;background:#261417;border-radius:10px;margin:10px 0}.badge{font-size:11px;padding:5px 8px;border:1px solid var(--line);border-radius:999px;color:var(--muted)}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}@keyframes glow{0%,100%{box-shadow:0 0 0 #28e59b00}50%{box-shadow:0 0 28px #28e59b22}}.card,.panel{animation:rise .45s ease both}.card:hover{transform:translateY(-3px);border-color:#2f5d52;transition:.2s}.goal i{animation:glow 1.8s ease infinite;transition:width .8s ease}
 @media(max-width:900px){.app{grid-template-columns:1fr}.side{display:none}.cards{grid-template-columns:1fr 1fr}.grid{grid-template-columns:1fr}main{padding:18px}}
 @media(max-width:520px){.cards{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column}.top h1{font-size:23px}}
 </style>
@@ -101,7 +110,7 @@ AUTH = """<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="vi
 
 DASH = """<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>TNB Dashboard</title>""" + BASE_STYLE + """
 <div class="app"><aside class="side"><div class="logo">TNB <span>Soluções</span></div><p class="muted">Central de vendas</p><nav>
-<a href="/">◈ Visão geral</a><a href="/sale/new">＋ Registrar venda</a>{% if is_admin %}<a href="/admin">♛ Administração</a>{% endif %}<a href="/logout">↪ Sair</a></nav></aside>
+<a href="/">◈ Visão geral</a><a href="/sale/new">＋ Registrar venda</a><a href="/goal">◎ Alterar meta</a><a href="/integrations">⌁ Integrações</a>{% if is_admin %}<a href="/admin">♛ Administração</a>{% endif %}<a href="/logout">↪ Sair</a></nav></aside>
 <main><div class="top"><div><span class="badge">{% if is_admin %}ADMIN{% else %}USUÁRIO{% endif %}</span><h1>Olá, {{name}} 👋</h1></div><a class="btn" href="/sale/new">+ Registrar venda</a></div>
 {% with ms=get_flashed_messages() %}{% for m in ms %}<div class="flash">{{m}}</div>{% endfor %}{% endwith %}
 <section class="cards"><div class="card"><label>Faturamento hoje</label><div class="value">{{today|money}}</div><div class="up">Vendas registradas hoje</div></div>
@@ -113,6 +122,7 @@ DASH = """<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="vi
 <section class="panel" style="margin-top:16px"><h3>Vendas recentes</h3>{% for s in sales %}<div class="sale"><span>{{s.product}} <small class="muted">• {{s.platform}} • {{s.created_at.strftime('%d/%m %H:%M')}}</small></span><b>+ {{s.amount|money}}</b></div>{% else %}<p class="muted">Nenhuma venda cadastrada ainda.</p>{% endfor %}</section>
 </main></div><script src="https://cdn.jsdelivr.net/npm/chart.js"></script><script>
 new Chart(document.getElementById('chart'),{type:'line',data:{labels:{{labels|safe}},datasets:[{data:{{values|safe}},borderColor:'#28e59b',backgroundColor:'#28e59b22',fill:true,tension:.4}]},options:{plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#8e9a98'},grid:{display:false}},y:{ticks:{color:'#8e9a98'},grid:{color:'#1c2728'}}}}});
+document.querySelectorAll('.value').forEach((el,i)=>{el.style.animation=`rise .45s ease ${i*.07}s both`;});
 </script></html>"""
 
 FORM = """<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Registrar venda</title>""" + BASE_STYLE + """
@@ -128,6 +138,21 @@ ADMIN = """<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="v
 <form method="post" action="/admin/adjust"><label>Valor (R$)</label><input name="amount" type="number" step="0.01" required><label>Motivo</label><input name="reason" required maxlength="220" placeholder="Ex.: ajuste inicial">
 <button class="btn">Adicionar ajuste</button></form></div>
 <div class="panel" style="margin-top:16px"><h3>Usuários</h3>{% for u in users %}<div class="sale"><span>{{u.name}} <small class="muted">• {{u.email}}</small></span><span class="badge">{% if u.is_admin %}ADMIN{% else %}USUÁRIO{% endif %}</span></div>{% endfor %}</div></main></html>"""
+
+GOAL_FORM = """<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Meta mensal</title>""" + BASE_STYLE + """
+<div class="auth panel"><div class="logo">TNB <span>Soluções</span></div><h2>Meta do mês</h2><p class="muted">Defina sua própria meta mensal. Ela altera a barra de progresso do seu painel.</p>
+<form method="post"><label>Nova meta (R$)</label><input name="goal" type="number" min="1" step="0.01" value="{{goal}}" required>
+<button class="btn" style="width:100%">Salvar meta</button></form><p style="text-align:center"><a href="/">Voltar ao painel</a></p></div></html>"""
+
+INTEGRATIONS = """<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Integrações</title>""" + BASE_STYLE + """
+<main style="max-width:1000px;margin:auto"><div class="top"><div><span class="badge">CONTAS</span><h1>Integrações</h1><p class="muted">Cada usuário conecta somente as próprias contas. Nunca informe sua senha das plataformas aqui.</p></div><a class="btn secondary" href="/">Voltar</a></div>
+<div class="cards" style="grid-template-columns:repeat(3,1fr)">
+{% for item in items %}
+<div class="card"><label>{{item.name}}</label><div class="value" style="font-size:20px">{{item.icon}} {{item.name}}</div>
+<p class="muted">{{item.text}}</p><span class="badge">{{item.status}}</span>
+{% if item.ready %}<a class="btn" style="margin-top:15px" href="{{item.url}}">Conectar</a>{% else %}<button class="btn secondary" style="margin-top:15px" disabled>Preparado para API oficial</button>{% endif %}
+</div>{% endfor %}</div>
+<div class="panel"><b>Importante:</b> vendas automáticas só serão registradas quando a plataforma confirmar a transação por integração oficial/API/webhook. Esta tela não coleta senhas de Mercado Livre, Shopee ou TikTok.</div></main></html>"""
 
 @app.route("/health")
 def health():
@@ -216,6 +241,35 @@ def new_sale():
         flash("Venda registrada com sucesso.")
         return redirect(url_for("dashboard"))
     return render_template_string(FORM)
+
+@app.route("/goal", methods=["GET","POST"])
+@login_required
+def goal():
+    uid=session["uid"]; conn=db(); cur=conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    if request.method=="POST":
+        try: value=float(request.form["goal"])
+        except: value=0
+        if value <= 0:
+            cur.close(); conn.close(); flash("Digite uma meta válida."); return redirect(url_for("goal"))
+        cur.execute("""INSERT INTO goals(user_id,monthly_goal) VALUES(%s,%s)
+                       ON CONFLICT(user_id) DO UPDATE SET monthly_goal=EXCLUDED.monthly_goal""",(uid,value))
+        conn.commit(); cur.close(); conn.close(); flash("Meta mensal atualizada.")
+        return redirect(url_for("dashboard"))
+    cur.execute("SELECT monthly_goal FROM goals WHERE user_id=%s",(uid,)); row=cur.fetchone()
+    cur.close(); conn.close()
+    return render_template_string(GOAL_FORM,goal=float(row["monthly_goal"] if row else 10000))
+
+@app.route("/integrations")
+@login_required
+def integrations():
+    # Os conectores reais serão habilitados somente após credenciais e permissões oficiais.
+    items=[
+      {"name":"Mercado Livre","icon":"🟡","text":"OAuth/API oficial por usuário. Estrutura pronta para a próxima etapa.","status":"Aguardando configuração","ready":False,"url":"#"},
+      {"name":"Shopee","icon":"🟠","text":"Será habilitado após acesso aprovado às ferramentas/API aplicáveis.","status":"Aguardando acesso","ready":False,"url":"#"},
+      {"name":"TikTok Shop","icon":"⚫","text":"Será habilitado após concluir a verificação e obter as permissões aplicáveis.","status":"Aguardando acesso","ready":False,"url":"#"}
+    ]
+    return render_template_string(INTEGRATIONS,items=items)
+
 
 @app.route("/admin")
 @login_required
