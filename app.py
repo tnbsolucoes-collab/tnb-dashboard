@@ -67,6 +67,19 @@ def init_db():
       created_at TIMESTAMP NOT NULL DEFAULT NOW(),
       UNIQUE(user_id, platform)
     );
+    CREATE TABLE IF NOT EXISTS site_projects(
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      client_name VARCHAR(140) NOT NULL,
+      project_name VARCHAR(180) NOT NULL,
+      project_value NUMERIC(12,2) NOT NULL DEFAULT 0,
+      domain_url TEXT,
+      deadline DATE,
+      monthly_maintenance NUMERIC(12,2) NOT NULL DEFAULT 0,
+      status VARCHAR(40) NOT NULL DEFAULT 'Orçamento',
+      created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+    );
     """)
     cur.execute("""
     CREATE TABLE IF NOT EXISTS push_subscriptions(
@@ -174,7 +187,7 @@ DASH = """<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="vi
 <button class="menu-toggle" id="menuToggle" type="button" aria-label="Abrir menu"><span></span><span></span><span></span></button>
 <div class="menu-overlay" id="menuOverlay"></div>
 <div class="app"><aside class="side"><div class="logo">Bith<span>fy</span></div><p class="muted">Central de vendas Bithfy</p><nav>
-<a href="/">◈ Visão geral</a><a href="/sale/new">＋ Registrar venda</a><a href="/goal">◎ Alterar meta</a><a href="/integrations">⌁ Integrações</a>{% if is_admin %}<a href="/admin">♛ Administração</a>{% endif %}<a href="/logout">↪ Sair</a></nav></aside>
+<a href="/">◈ Visão geral</a><a href="/sale/new">＋ Registrar venda</a><a href="/sites">🌐 Sites/Clientes</a><a href="/goal">◎ Alterar meta</a><a href="/integrations">⌁ Integrações</a>{% if is_admin %}<a href="/admin">♛ Administração</a>{% endif %}<a href="/logout">↪ Sair</a></nav></aside>
 <main><div class="top"><div><span class="badge">{% if is_admin %}ADMIN{% else %}USUÁRIO{% endif %}</span><h1>Olá, {{name}} 👋</h1></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn secondary" id="notifyBtn" type="button">🔔 Ativar notificações</button><button class="btn secondary" id="passkeyBtn" type="button">🔐 Ativar Face ID</button><a class="btn" href="/sale/new">+ Registrar venda</a></div></div>
 {% with ms=get_flashed_messages() %}{% for m in ms %}<div class="flash">{{m}}</div>{% endfor %}{% endwith %}
 <section class="cards"><div class="card"><label>Faturamento hoje</label><div class="value">{{today|money}}</div><div class="up">Vendas registradas hoje</div></div>
@@ -255,6 +268,21 @@ INTEGRATIONS = """<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta 
 </div>{% endfor %}</div>
 <div class="panel"><b>Importante:</b> vendas automáticas só serão registradas quando a plataforma confirmar a transação por integração oficial/API/webhook. Esta tela não coleta senhas de Mercado Livre, Shopee ou TikTok.</div></main></html>"""
 
+
+
+SITES = """<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Sites e Clientes • Bithfy</title>""" + BASE_STYLE + """
+<main style="max-width:1100px;margin:auto"><div class="top"><div><span class="badge">PROJETOS</span><h1>🌐 Sites / Clientes</h1><p class="muted">Organize clientes, valores, domínios, prazos, manutenção e pagamentos.</p></div><div style="display:flex;gap:8px;flex-wrap:wrap"><a class="btn" href="/sites/new">+ Novo projeto</a><a class="btn secondary" href="/">Voltar</a></div></div>
+{% with ms=get_flashed_messages() %}{% for m in ms %}<div class="flash">{{m}}</div>{% endfor %}{% endwith %}
+<section class="cards"><div class="card"><label>Projetos</label><div class="value">{{count}}</div></div><div class="card"><label>Valor dos projetos</label><div class="value">{{total_value|money}}</div></div><div class="card"><label>Manutenção mensal</label><div class="value">{{maintenance|money}}</div></div><div class="card"><label>Pagos</label><div class="value">{{paid}}</div></div></section>
+<section class="panel" style="margin-top:16px"><h3>Meus projetos</h3>
+{% for p in projects %}
+<div class="sale" style="align-items:flex-start;gap:15px"><div style="min-width:0"><b>{{p.project_name}}</b><div class="muted" style="margin-top:5px">Cliente: {{p.client_name}} • {{p.status}}</div><div class="muted" style="margin-top:5px">Projeto: {{p.project_value|money}}{% if p.monthly_maintenance %} • Manutenção: {{p.monthly_maintenance|money}}/mês{% endif %}{% if p.deadline %} • Prazo: {{p.deadline.strftime('%d/%m/%Y')}}{% endif %}</div>{% if p.domain_url %}<div style="margin-top:6px"><a href="{{p.domain_url}}" target="_blank" rel="noopener">Abrir site/domínio ↗</a></div>{% endif %}</div><div style="display:flex;gap:7px;flex-wrap:wrap"><a class="btn secondary small" href="/sites/{{p.id}}/edit">Editar</a><form method="post" action="/sites/{{p.id}}/delete" onsubmit="return confirm('Excluir este projeto?')"><button class="btn danger small" type="submit">🗑 Excluir</button></form></div></div>
+{% else %}<p class="muted">Nenhum site ou cliente cadastrado ainda.</p>{% endfor %}
+</section></main></html>"""
+
+SITE_FORM = """<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{{title}} • Bithfy</title>""" + BASE_STYLE + """
+<div class="auth panel" style="max-width:720px"><div class="logo">Bith<span>fy</span></div><h2>{{title}}</h2><p class="muted">Cadastre o projeto do cliente. Você poderá editar tudo depois.</p>
+<form method="post"><label>Cliente</label><input name="client_name" required maxlength="140" value="{{p.client_name if p else ''}}" placeholder="Ex.: Barbearia Central"><label>Projeto / site</label><input name="project_name" required maxlength="180" value="{{p.project_name if p else ''}}" placeholder="Ex.: Site institucional"><label>Valor do projeto (R$)</label><input name="project_value" type="number" min="0" step="0.01" required value="{{p.project_value if p else '0'}}"><label>Domínio ou link</label><input name="domain_url" maxlength="500" value="{{p.domain_url if p and p.domain_url else ''}}" placeholder="https://..."><label>Prazo de entrega</label><input name="deadline" type="date" value="{{p.deadline.isoformat() if p and p.deadline else ''}}"><label>Manutenção mensal (R$)</label><input name="monthly_maintenance" type="number" min="0" step="0.01" value="{{p.monthly_maintenance if p else '0'}}"><label>Status</label><select name="status">{% for s in statuses %}<option value="{{s}}" {% if p and p.status==s %}selected{% endif %}>{{s}}</option>{% endfor %}</select><button class="btn" style="width:100%">{{button}}</button></form><p style="text-align:center"><a href="/sites">Voltar para Sites/Clientes</a></p></div></html>"""
 
 def _rp():
     host=urlparse(PUBLIC_BASE_URL).hostname if PUBLIC_BASE_URL else request.host.split(":")[0]
@@ -469,6 +497,56 @@ def goal():
     cur.execute("SELECT monthly_goal FROM goals WHERE user_id=%s",(uid,)); row=cur.fetchone()
     cur.close(); conn.close()
     return render_template_string(GOAL_FORM,goal=float(row["monthly_goal"] if row else 10000))
+
+
+SITE_STATUSES = ["Orçamento","Em produção","Aguardando pagamento","Pago","Publicado"]
+
+def _site_form_values():
+    def number(name):
+        try: return max(0, float(request.form.get(name, "0") or 0))
+        except: return 0
+    url=request.form.get("domain_url","").strip()
+    if url and not url.lower().startswith(("http://","https://")): url="https://"+url
+    status=request.form.get("status","Orçamento")
+    if status not in SITE_STATUSES: status="Orçamento"
+    return {"client_name":request.form.get("client_name","").strip(),"project_name":request.form.get("project_name","").strip(),"project_value":number("project_value"),"domain_url":url or None,"deadline":request.form.get("deadline","").strip() or None,"monthly_maintenance":number("monthly_maintenance"),"status":status}
+
+@app.route("/sites")
+@login_required
+def sites():
+    uid=session["uid"]; conn=db(); cur=conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cur.execute("SELECT * FROM site_projects WHERE user_id=%s ORDER BY created_at DESC",(uid,)); projects=cur.fetchall()
+    cur.execute("""SELECT COUNT(*) count,COALESCE(SUM(project_value),0) total_value,COALESCE(SUM(monthly_maintenance),0) maintenance,COUNT(*) FILTER (WHERE status='Pago') paid FROM site_projects WHERE user_id=%s""",(uid,)); s=cur.fetchone()
+    cur.close(); conn.close()
+    return render_template_string(SITES,projects=projects,count=s["count"],total_value=float(s["total_value"]),maintenance=float(s["maintenance"]),paid=s["paid"])
+
+@app.route("/sites/new",methods=["GET","POST"])
+@login_required
+def site_new():
+    if request.method=="POST":
+        v=_site_form_values()
+        if not v["client_name"] or not v["project_name"]: flash("Informe o cliente e o projeto."); return redirect(url_for("site_new"))
+        conn=db(); cur=conn.cursor(); cur.execute("""INSERT INTO site_projects(user_id,client_name,project_name,project_value,domain_url,deadline,monthly_maintenance,status) VALUES(%s,%s,%s,%s,%s,%s,%s,%s)""",(session["uid"],v["client_name"],v["project_name"],v["project_value"],v["domain_url"],v["deadline"],v["monthly_maintenance"],v["status"])); conn.commit(); cur.close(); conn.close()
+        flash("Projeto cadastrado com sucesso."); return redirect(url_for("sites"))
+    return render_template_string(SITE_FORM,title="Novo site / cliente",button="Salvar projeto",p=None,statuses=SITE_STATUSES)
+
+@app.route("/sites/<int:project_id>/edit",methods=["GET","POST"])
+@login_required
+def site_edit(project_id):
+    uid=session["uid"]; conn=db(); cur=conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor); cur.execute("SELECT * FROM site_projects WHERE id=%s AND user_id=%s",(project_id,uid)); p=cur.fetchone()
+    if not p: cur.close(); conn.close(); return "Projeto não encontrado",404
+    if request.method=="POST":
+        v=_site_form_values()
+        if not v["client_name"] or not v["project_name"]: cur.close(); conn.close(); flash("Informe o cliente e o projeto."); return redirect(url_for("site_edit",project_id=project_id))
+        cur.execute("""UPDATE site_projects SET client_name=%s,project_name=%s,project_value=%s,domain_url=%s,deadline=%s,monthly_maintenance=%s,status=%s,updated_at=NOW() WHERE id=%s AND user_id=%s""",(v["client_name"],v["project_name"],v["project_value"],v["domain_url"],v["deadline"],v["monthly_maintenance"],v["status"],project_id,uid)); conn.commit(); cur.close(); conn.close()
+        flash("Projeto atualizado."); return redirect(url_for("sites"))
+    cur.close(); conn.close(); return render_template_string(SITE_FORM,title="Editar site / cliente",button="Salvar alterações",p=p,statuses=SITE_STATUSES)
+
+@app.route("/sites/<int:project_id>/delete",methods=["POST"])
+@login_required
+def site_delete(project_id):
+    conn=db(); cur=conn.cursor(); cur.execute("DELETE FROM site_projects WHERE id=%s AND user_id=%s RETURNING id",(project_id,session["uid"])); deleted=cur.fetchone(); conn.commit(); cur.close(); conn.close()
+    flash("Projeto excluído." if deleted else "Projeto não encontrado."); return redirect(url_for("sites"))
 
 @app.route("/integrations")
 @login_required
