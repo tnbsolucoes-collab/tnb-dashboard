@@ -98,9 +98,10 @@ input,select{width:100%;padding:12px;margin:7px 0 13px;border-radius:10px;border
 @media(max-width:900px){.app{grid-template-columns:1fr}.side{display:none}.cards{grid-template-columns:1fr 1fr}.grid{grid-template-columns:1fr}main{padding:18px}}
 @media(max-width:520px){.cards{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column}.top h1{font-size:23px}}
 @media(max-width:900px){
-.sidebar{display:block;transform:translateX(-110%);transition:transform .3s ease;z-index:1001;box-shadow:18px 0 50px #0009}
-.sidebar.open{transform:translateX(0)}
-.main{margin-left:0;padding:72px 18px 18px}.cards{grid-template-columns:1fr 1fr}.split{grid-template-columns:1fr}
+.app{display:block}
+.side{display:block;position:fixed;top:0;left:0;width:260px;height:100vh;overflow-y:auto;transform:translateX(-110%);transition:transform .3s ease;z-index:1001;box-shadow:18px 0 50px #0009}
+.side.open{transform:translateX(0)}
+main{margin-left:0;padding:76px 18px 18px}.cards{grid-template-columns:1fr 1fr}.grid{grid-template-columns:1fr}
 .menu-toggle{display:flex}
 .menu-overlay{display:block;position:fixed;inset:0;background:#0009;opacity:0;visibility:hidden;transition:.3s;z-index:1000;backdrop-filter:blur(3px)}
 .menu-overlay.show{opacity:1;visibility:visible}
@@ -114,8 +115,8 @@ input,select{width:100%;padding:12px;margin:7px 0 13px;border-radius:10px;border
 </style>
 """
 
-AUTH = """<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{{title}} - TNB</title>""" + BASE_STYLE + """
-<div class="auth panel"><div class="logo">TNB <span>Soluções</span></div><h2>{{title}}</h2>
+AUTH = """<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{{title}} - Bithfy</title>""" + BASE_STYLE + """
+<div class="auth panel"><div class="logo">Bith<span>fy</span></div><h2>{{title}}</h2>
 {% with ms=get_flashed_messages() %}{% for m in ms %}<div class="flash">{{m}}</div>{% endfor %}{% endwith %}
 <form method="post">
 {% if register %}<label>Nome</label><input name="name" required maxlength="120">{% endif %}
@@ -124,8 +125,10 @@ AUTH = """<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="vi
 <button class="btn" style="width:100%">{{button}}</button></form>
 <p class="muted" style="text-align:center">{{bottom|safe}}</p></div></html>"""
 
-DASH = """<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>TNB Dashboard</title>""" + BASE_STYLE + """
-<div class="app"><aside class="side"><div class="logo">TNB <span>Soluções</span></div><p class="muted">Central de vendas</p><nav>
+DASH = """<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Bithfy</title>""" + BASE_STYLE + """
+<button class="menu-toggle" id="menuToggle" type="button" aria-label="Abrir menu"><span></span><span></span><span></span></button>
+<div class="menu-overlay" id="menuOverlay"></div>
+<div class="app"><aside class="side"><div class="logo">Bith<span>fy</span></div><p class="muted">Central de vendas Bithfy</p><nav>
 <a href="/">◈ Visão geral</a><a href="/sale/new">＋ Registrar venda</a><a href="/goal">◎ Alterar meta</a><a href="/integrations">⌁ Integrações</a>{% if is_admin %}<a href="/admin">♛ Administração</a>{% endif %}<a href="/logout">↪ Sair</a></nav></aside>
 <main><div class="top"><div><span class="badge">{% if is_admin %}ADMIN{% else %}USUÁRIO{% endif %}</span><h1>Olá, {{name}} 👋</h1></div><a class="btn" href="/sale/new">+ Registrar venda</a></div>
 {% with ms=get_flashed_messages() %}{% for m in ms %}<div class="flash">{{m}}</div>{% endfor %}{% endwith %}
@@ -139,15 +142,24 @@ DASH = """<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="vi
 </main></div><script src="https://cdn.jsdelivr.net/npm/chart.js"></script><script>
 new Chart(document.getElementById('chart'),{type:'line',data:{labels:{{labels|safe}},datasets:[{data:{{values|safe}},borderColor:'#258cff',backgroundColor:'#258cff22',fill:true,tension:.4}]},options:{plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#8e9a98'},grid:{display:false}},y:{ticks:{color:'#8e9a98'},grid:{color:'#102b4a'}}}}});
 document.querySelectorAll('.value').forEach((el,i)=>{el.style.animation=`rise .45s ease ${i*.07}s both`;});
+(function(){
+ const btn=document.getElementById('menuToggle'), side=document.querySelector('.side'), overlay=document.getElementById('menuOverlay');
+ if(!btn||!side||!overlay)return;
+ function menu(open){side.classList.toggle('open',open);overlay.classList.toggle('show',open);btn.classList.toggle('active',open);document.body.style.overflow=open?'hidden':'';}
+ btn.addEventListener('click',()=>menu(!side.classList.contains('open')));
+ overlay.addEventListener('click',()=>menu(false));
+ side.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>menu(false)));
+ window.addEventListener('resize',()=>{if(innerWidth>900)menu(false)});
+})();
 </script></html>"""
 
 FORM = """<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Registrar venda</title>""" + BASE_STYLE + """
-<div class="auth panel"><div class="logo">TNB <span>Soluções</span></div><h2>Registrar venda</h2>
+<div class="auth panel"><div class="logo">Bith<span>fy</span></div><h2>Registrar venda</h2>
 <form method="post"><label>Produto</label><input name="product" required maxlength="180"><label>Valor (R$)</label><input name="amount" type="number" min="0.01" step="0.01" required>
 <label>Plataforma</label><select name="platform"><option>Cakto</option><option>Mercado Livre</option><option>Shopee</option><option>TikTok Shop</option><option>Outra</option></select>
 <button class="btn" style="width:100%">Salvar venda</button></form><p style="text-align:center"><a href="/">Voltar ao painel</a></p></div></html>"""
 
-ADMIN = """<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Admin TNB</title>""" + BASE_STYLE + """
+ADMIN = """<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Admin Bithfy</title>""" + BASE_STYLE + """
 <main style="max-width:900px;margin:auto"><div class="top"><div><span class="badge">ADMIN</span><h1>Administração</h1></div><a class="btn secondary" href="/">Voltar</a></div>
 {% with ms=get_flashed_messages() %}{% for m in ms %}<div class="flash">{{m}}</div>{% endfor %}{% endwith %}
 <div class="panel" style="margin-top:20px"><h3>Adicionar ajuste ao meu saldo</h3><p class="muted">Ajustes ficam identificados e não são contados como venda.</p>
@@ -156,7 +168,7 @@ ADMIN = """<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="v
 <div class="panel" style="margin-top:16px"><h3>Usuários</h3>{% for u in users %}<div class="sale"><span>{{u.name}} <small class="muted">• {{u.email}}</small></span><span class="badge">{% if u.is_admin %}ADMIN{% else %}USUÁRIO{% endif %}</span></div>{% endfor %}</div></main></html>"""
 
 GOAL_FORM = """<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Meta mensal</title>""" + BASE_STYLE + """
-<div class="auth panel"><div class="logo">TNB <span>Soluções</span></div><h2>Meta do mês</h2><p class="muted">Defina sua própria meta mensal. Ela altera a barra de progresso do seu painel.</p>
+<div class="auth panel"><div class="logo">Bith<span>fy</span></div><h2>Meta do mês</h2><p class="muted">Defina sua própria meta mensal. Ela altera a barra de progresso do seu painel.</p>
 <form method="post"><label>Nova meta (R$)</label><input name="goal" type="number" min="1" step="0.01" value="{{goal}}" required>
 <button class="btn" style="width:100%">Salvar meta</button></form><p style="text-align:center"><a href="/">Voltar ao painel</a></p></div></html>"""
 
