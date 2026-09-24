@@ -1,4 +1,4 @@
-=import os
+import os
 from datetime import datetime, date, timedelta
 from functools import wraps
 from flask import Flask, request, redirect, url_for, session, flash, render_template_string, jsonify, Response
