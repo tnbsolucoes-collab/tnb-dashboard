@@ -80,6 +80,7 @@ def init_db():
       created_at TIMESTAMP NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMP NOT NULL DEFAULT NOW()
     );
+    ALTER TABLE site_projects ADD COLUMN IF NOT EXISTS sale_id INTEGER REFERENCES sales(id) ON DELETE SET NULL;
     """)
     cur.execute("""
     CREATE TABLE IF NOT EXISTS push_subscriptions(
@@ -541,6 +542,16 @@ def site_edit(project_id):
         old_status = p["status"]
         cur.execute("""UPDATE site_projects SET client_name=%s,project_name=%s,project_value=%s,domain_url=%s,deadline=%s,monthly_maintenance=%s,status=%s,updated_at=NOW() WHERE id=%s AND user_id=%s""",(v["client_name"],v["project_name"],v["project_value"],v["domain_url"],v["deadline"],v["monthly_maintenance"],v["status"],project_id,uid)); conn.commit(); cur.close(); conn.close()
         if old_status != "Pago" and v["status"] == "Pago":
+            conn2=db(); cur2=conn2.cursor()
+            cur2.execute("SELECT sale_id FROM site_projects WHERE id=%s AND user_id=%s",(project_id,uid))
+            linked=cur2.fetchone()
+            if linked and not linked[0]:
+                cur2.execute("""INSERT INTO sales(user_id,product,platform,amount) VALUES(%s,%s,%s,%s) RETURNING id""",
+                             (uid, f'Site: {v["project_name"]}', "Venda de site", v["project_value"]))
+                sale_id=cur2.fetchone()[0]
+                cur2.execute("UPDATE site_projects SET sale_id=%s WHERE id=%s AND user_id=%s",(sale_id,project_id,uid))
+                conn2.commit()
+            cur2.close(); conn2.close()
             valor = money(v["project_value"])
             send_push_to_user(uid, "💰 Pagamento confirmado", f'{v["project_name"]} — {valor} • Cliente: {v["client_name"]}', "/sites")
         flash("Projeto atualizado."); return redirect(url_for("sites"))
