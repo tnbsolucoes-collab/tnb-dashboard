@@ -1,15 +1,26 @@
 import os
 from datetime import datetime, date, timedelta
 from functools import wraps
-from flask import Flask, request, redirect, url_for, session, flash, render_template_string, jsonify
+from flask import Flask, request, redirect, url_for, session, flash, render_template_string, jsonify, Response
 from werkzeug.security import generate_password_hash, check_password_hash
 import psycopg2
 import psycopg2.extras
+import json
+import base64
+from urllib.parse import urlparse
+from pywebpush import webpush, WebPushException
+from webauthn import generate_registration_options, verify_registration_response, generate_authentication_options, verify_authentication_response
+from webauthn.helpers.structs import PublicKeyCredentialDescriptor, AuthenticatorSelectionCriteria, UserVerificationRequirement, ResidentKeyRequirement
+from webauthn.helpers import options_to_json
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "troque-esta-chave-no-render")
 DATABASE_URL = os.environ.get("DATABASE_URL", "")
 ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL", "").strip().lower()
+PUBLIC_BASE_URL = os.environ.get("PUBLIC_BASE_URL", "").rstrip("/")
+VAPID_PUBLIC_KEY = os.environ.get("VAPID_PUBLIC_KEY", "")
+VAPID_PRIVATE_KEY = os.environ.get("VAPID_PRIVATE_KEY", "")
+VAPID_SUBJECT = os.environ.get("VAPID_SUBJECT", "mailto:admin@example.com")
 
 def db():
     return psycopg2.connect(DATABASE_URL, sslmode="require")
@@ -57,6 +68,25 @@ def init_db():
       UNIQUE(user_id, platform)
     );
     """)
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS push_subscriptions(
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      endpoint TEXT UNIQUE NOT NULL,
+      subscription_json TEXT NOT NULL,
+      created_at TIMESTAMP NOT NULL DEFAULT NOW()
+    );
+    CREATE TABLE IF NOT EXISTS passkeys(
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      credential_id TEXT UNIQUE NOT NULL,
+      public_key BYTEA NOT NULL,
+      sign_count BIGINT NOT NULL DEFAULT 0,
+      device_type VARCHAR(40),
+      backed_up BOOLEAN DEFAULT FALSE,
+      created_at TIMESTAMP NOT NULL DEFAULT NOW()
+    );
+    """)
     conn.commit()
     cur.close()
     conn.close()
@@ -89,7 +119,7 @@ linear-gradient(135deg,#02040a,#06101f);background-attachment:fixed;color:var(--
 a{color:inherit}.app{display:grid;grid-template-columns:230px 1fr;min-height:100vh}.side{border-right:1px solid var(--line);padding:28px 20px;background:linear-gradient(180deg,#030712,#071426 55%,#02050a)}
 .logo{font-weight:900;font-size:22px}.logo span{color:var(--green)}.muted{color:var(--muted)}nav a{display:block;margin:9px 0;padding:13px;border-radius:12px;text-decoration:none;color:#b8c2c0}nav a:hover{background:#0a2342;color:#63b3ff;transform:translateX(3px)}nav a{transition:.2s ease}
 main{padding:30px;max-width:1400px;width:100%}.top{display:flex;justify-content:space-between;gap:15px;align-items:center}.top h1{margin:0;font-size:28px}.btn{display:inline-block;border:0;border-radius:12px;padding:12px 16px;font-weight:800;background:linear-gradient(135deg,#1478ff,#43a8ff);color:white;box-shadow:0 8px 24px #1478ff33;cursor:pointer;text-decoration:none}
-.btn.secondary{background:#10233c;color:white}.btn.danger{background:#3a1b20;color:#ff8a96}.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin:25px 0}.card,.panel{background:linear-gradient(145deg,#0b1422,#050a12);border:1px solid #16365c;border-radius:18px;padding:20px;box-shadow:0 15px 40px #0005}
+.btn.secondary{background:#10233c;color:white}.btn.danger{background:#3a1b20;color:#ff8a96}.btn.small{padding:8px 10px;font-size:12px}.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin:25px 0}.card,.panel{background:linear-gradient(145deg,#0b1422,#050a12);border:1px solid #16365c;border-radius:18px;padding:20px;box-shadow:0 15px 40px #0005}
 .card label{color:var(--muted);font-size:13px}.value{font-size:27px;font-weight:900;margin-top:8px}.up{font-size:12px;color:var(--green);margin-top:6px}.grid{display:grid;grid-template-columns:2fr 1fr;gap:16px}
 input,select{width:100%;padding:12px;margin:7px 0 13px;border-radius:10px;border:1px solid #1c4778;background:#050b14;color:white}.sale{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid #102b4a}.sale b{color:var(--green)}
 .goal{height:11px;background:#0b1a2c;border-radius:20px;overflow:hidden}.goal i{display:block;height:100%;background:linear-gradient(90deg,#1478ff,#63c5ff)}
@@ -123,14 +153,29 @@ AUTH = """<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="vi
 <label>E-mail</label><input name="email" type="email" required>
 <label>Senha</label><input name="password" type="password" required minlength="6">
 <button class="btn" style="width:100%">{{button}}</button></form>
+{% if not register %}<button class="btn secondary" id="quickLogin" style="width:100%;margin-top:10px" type="button">🔐 Entrar com Face ID / passkey</button>
+<script>
+function b64u(v){v=v.replace(/-/g,'+').replace(/_/g,'/');while(v.length%4)v+='=';return Uint8Array.from(atob(v),c=>c.charCodeAt(0))}
+function enc(b){return btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
+document.getElementById('quickLogin').onclick=async()=>{
+ try{
+  let r=await fetch('/passkey/login/options',{method:'POST'}),o=await r.json();
+  o.challenge=b64u(o.challenge);if(o.allowCredentials)o.allowCredentials=o.allowCredentials.map(x=>({...x,id:b64u(x.id)}));
+  let c=await navigator.credentials.get({publicKey:o});
+  let body={id:c.id,rawId:enc(c.rawId),type:c.type,response:{clientDataJSON:enc(c.response.clientDataJSON),authenticatorData:enc(c.response.authenticatorData),signature:enc(c.response.signature),userHandle:c.response.userHandle?enc(c.response.userHandle):null}};
+  r=await fetch('/passkey/login/verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  let j=await r.json(); if(j.ok) location='/'; else alert(j.error||'Não foi possível entrar.');
+ }catch(e){alert('Face ID/passkey indisponível ou cancelado.');}
+};
+</script>{% endif %}
 <p class="muted" style="text-align:center">{{bottom|safe}}</p></div></html>"""
 
-DASH = """<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Bithfy</title>""" + BASE_STYLE + """
+DASH = """<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#050b15"><link rel="manifest" href="/manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><title>Bithfy</title>""" + BASE_STYLE + """
 <button class="menu-toggle" id="menuToggle" type="button" aria-label="Abrir menu"><span></span><span></span><span></span></button>
 <div class="menu-overlay" id="menuOverlay"></div>
 <div class="app"><aside class="side"><div class="logo">Bith<span>fy</span></div><p class="muted">Central de vendas Bithfy</p><nav>
 <a href="/">◈ Visão geral</a><a href="/sale/new">＋ Registrar venda</a><a href="/goal">◎ Alterar meta</a><a href="/integrations">⌁ Integrações</a>{% if is_admin %}<a href="/admin">♛ Administração</a>{% endif %}<a href="/logout">↪ Sair</a></nav></aside>
-<main><div class="top"><div><span class="badge">{% if is_admin %}ADMIN{% else %}USUÁRIO{% endif %}</span><h1>Olá, {{name}} 👋</h1></div><a class="btn" href="/sale/new">+ Registrar venda</a></div>
+<main><div class="top"><div><span class="badge">{% if is_admin %}ADMIN{% else %}USUÁRIO{% endif %}</span><h1>Olá, {{name}} 👋</h1></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn secondary" id="notifyBtn" type="button">🔔 Ativar notificações</button><button class="btn secondary" id="passkeyBtn" type="button">🔐 Ativar Face ID</button><a class="btn" href="/sale/new">+ Registrar venda</a></div></div>
 {% with ms=get_flashed_messages() %}{% for m in ms %}<div class="flash">{{m}}</div>{% endfor %}{% endwith %}
 <section class="cards"><div class="card"><label>Faturamento hoje</label><div class="value">{{today|money}}</div><div class="up">Vendas registradas hoje</div></div>
 <div class="card"><label>Vendas no mês</label><div class="value">{{month_sales|money}}</div><div class="up">Somente vendas reais registradas</div></div>
@@ -138,7 +183,7 @@ DASH = """<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="vi
 <div class="card"><label>Saldo total</label><div class="value">{{total|money}}</div><div class="up">{{count}} vendas no mês</div></div></section>
 <section class="grid"><div class="panel"><h3>Últimos 7 dias</h3><canvas id="chart" height="115"></canvas></div>
 <div class="panel"><h3>Meta do mês</h3><div class="value">{{month_sales|money}} / {{goal|money}}</div><p class="muted">{{pct}}% concluída</p><div class="goal"><i style="width:{{pct}}%"></i></div></div></section>
-<section class="panel" style="margin-top:16px"><h3>Vendas recentes</h3>{% for s in sales %}<div class="sale"><span>{{s.product}} <small class="muted">• {{s.platform}} • {{s.created_at.strftime('%d/%m %H:%M')}}</small></span><b>+ {{s.amount|money}}</b></div>{% else %}<p class="muted">Nenhuma venda cadastrada ainda.</p>{% endfor %}</section>
+<section class="panel" style="margin-top:16px"><h3>Vendas recentes</h3>{% for s in sales %}<div class="sale"><span>{{s.product}} <small class="muted">• {{s.platform}} • {{s.created_at.strftime('%d/%m %H:%M')}}</small></span><span style="display:flex;align-items:center;gap:9px"><b>+ {{s.amount|money}}</b>{% if is_admin %}<form method="post" action="/admin/sale/{{s.id}}/delete" onsubmit="return confirm('Apagar esta venda? Essa ação não pode ser desfeita.')"><button class="btn danger small" type="submit">🗑 Apagar</button></form>{% endif %}</span></div>{% else %}<p class="muted">Nenhuma venda cadastrada ainda.</p>{% endfor %}</section>
 </main></div><script src="https://cdn.jsdelivr.net/npm/chart.js"></script><script>
 new Chart(document.getElementById('chart'),{type:'line',data:{labels:{{labels|safe}},datasets:[{data:{{values|safe}},borderColor:'#258cff',backgroundColor:'#258cff22',fill:true,tension:.4}]},options:{plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#8e9a98'},grid:{display:false}},y:{ticks:{color:'#8e9a98'},grid:{color:'#102b4a'}}}}});
 document.querySelectorAll('.value').forEach((el,i)=>{el.style.animation=`rise .45s ease ${i*.07}s both`;});
@@ -151,6 +196,34 @@ document.querySelectorAll('.value').forEach((el,i)=>{el.style.animation=`rise .4
  side.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>menu(false)));
  window.addEventListener('resize',()=>{if(innerWidth>900)menu(false)});
 })();
+if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js');}
+function b64urlToBuf(v){v=v.replace(/-/g,'+').replace(/_/g,'/');while(v.length%4)v+='=';return Uint8Array.from(atob(v),c=>c.charCodeAt(0));}
+function bufToB64url(buf){return btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');}
+const notifyBtn=document.getElementById('notifyBtn');
+if(notifyBtn) notifyBtn.onclick=async()=>{
+ try{
+  const reg=await navigator.serviceWorker.ready;
+  const permission=await Notification.requestPermission();
+  if(permission!=='granted') return alert('Permissão de notificações não concedida.');
+  const r=await fetch('/push/public-key'); const j=await r.json();
+  if(!j.publicKey) return alert('Notificações ainda precisam das chaves VAPID no Render.');
+  const sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64urlToBuf(j.publicKey)});
+  await fetch('/push/subscribe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(sub)});
+  alert('Notificações ativadas neste aparelho.');
+ }catch(e){alert('Não foi possível ativar notificações neste aparelho.');}
+};
+const passkeyBtn=document.getElementById('passkeyBtn');
+if(passkeyBtn) passkeyBtn.onclick=async()=>{
+ try{
+  let r=await fetch('/passkey/register/options',{method:'POST'}); let o=await r.json();
+  o.challenge=b64urlToBuf(o.challenge); o.user.id=b64urlToBuf(o.user.id);
+  if(o.excludeCredentials)o.excludeCredentials=o.excludeCredentials.map(x=>({...x,id:b64urlToBuf(x.id)}));
+  const cred=await navigator.credentials.create({publicKey:o});
+  const body={id:cred.id,rawId:bufToB64url(cred.rawId),type:cred.type,response:{clientDataJSON:bufToB64url(cred.response.clientDataJSON),attestationObject:bufToB64url(cred.response.attestationObject)}};
+  r=await fetch('/passkey/register/verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const j=await r.json(); alert(j.ok?'Face ID/passkey ativado para acesso rápido.':(j.error||'Falha ao ativar.'));
+ }catch(e){alert('Face ID/passkey não foi ativado.');}
+};
 </script></html>"""
 
 FORM = """<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Registrar venda</title>""" + BASE_STYLE + """
@@ -181,6 +254,115 @@ INTEGRATIONS = """<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta 
 {% if item.ready %}<a class="btn" style="margin-top:15px" href="{{item.url}}">Conectar</a>{% else %}<button class="btn secondary" style="margin-top:15px" disabled>Preparado para API oficial</button>{% endif %}
 </div>{% endfor %}</div>
 <div class="panel"><b>Importante:</b> vendas automáticas só serão registradas quando a plataforma confirmar a transação por integração oficial/API/webhook. Esta tela não coleta senhas de Mercado Livre, Shopee ou TikTok.</div></main></html>"""
+
+
+def _rp():
+    host=urlparse(PUBLIC_BASE_URL).hostname if PUBLIC_BASE_URL else request.host.split(":")[0]
+    origin=PUBLIC_BASE_URL if PUBLIC_BASE_URL else request.host_url.rstrip("/")
+    return host, origin
+
+def _b64e(data):
+    return base64.urlsafe_b64encode(bytes(data)).decode().rstrip("=")
+
+def _b64d(data):
+    return base64.urlsafe_b64decode(data + "=" * (-len(data) % 4))
+
+@app.route("/manifest.webmanifest")
+def manifest():
+    return jsonify({"name":"Bithfy","short_name":"Bithfy","start_url":"/","display":"standalone","background_color":"#02050a","theme_color":"#050b15"})
+
+@app.route("/sw.js")
+def service_worker():
+    js = """self.addEventListener('push',e=>{let d={};try{d=e.data.json()}catch(x){d={title:'Bithfy',body:e.data?e.data.text():'Nova atualização'}};e.waitUntil(self.registration.showNotification(d.title||'Bithfy',{body:d.body||'',data:{url:d.url||'/'}}))});self.addEventListener('notificationclick',e=>{e.notification.close();e.waitUntil(clients.matchAll({type:'window',includeUncontrolled:true}).then(ws=>{for(const w of ws){if('focus'in w){w.navigate(e.notification.data.url||'/');return w.focus()}}return clients.openWindow(e.notification.data.url||'/')}))});"""
+    return Response(js,mimetype="application/javascript")
+
+@app.route("/push/public-key")
+@login_required
+def push_public_key():
+    return jsonify({"publicKey":VAPID_PUBLIC_KEY})
+
+@app.route("/push/subscribe",methods=["POST"])
+@login_required
+def push_subscribe():
+    sub=request.get_json(force=True); endpoint=sub.get("endpoint")
+    if not endpoint:return jsonify({"ok":False}),400
+    conn=db();cur=conn.cursor()
+    cur.execute("""INSERT INTO push_subscriptions(user_id,endpoint,subscription_json) VALUES(%s,%s,%s)
+                   ON CONFLICT(endpoint) DO UPDATE SET user_id=EXCLUDED.user_id,subscription_json=EXCLUDED.subscription_json""",
+                (session["uid"],endpoint,json.dumps(sub)))
+    conn.commit();cur.close();conn.close()
+    return jsonify({"ok":True})
+
+def send_push_to_user(uid,title,body,url="/"):
+    if not (VAPID_PRIVATE_KEY and VAPID_PUBLIC_KEY): return
+    conn=db();cur=conn.cursor()
+    cur.execute("SELECT id,subscription_json FROM push_subscriptions WHERE user_id=%s",(uid,))
+    rows=cur.fetchall()
+    for sid,raw in rows:
+        try:
+            webpush(subscription_info=json.loads(raw),data=json.dumps({"title":title,"body":body,"url":url}),
+                    vapid_private_key=VAPID_PRIVATE_KEY,vapid_claims={"sub":VAPID_SUBJECT})
+        except WebPushException as e:
+            if getattr(e,"response",None) is not None and e.response.status_code in (404,410):
+                cur.execute("DELETE FROM push_subscriptions WHERE id=%s",(sid,))
+    conn.commit();cur.close();conn.close()
+
+@app.route("/passkey/register/options",methods=["POST"])
+@login_required
+def passkey_register_options():
+    conn=db();cur=conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cur.execute("SELECT id,name,email FROM users WHERE id=%s",(session["uid"],));u=cur.fetchone()
+    cur.execute("SELECT credential_id FROM passkeys WHERE user_id=%s",(session["uid"],));existing=cur.fetchall()
+    cur.close();conn.close();rp_id,_=_rp()
+    opts=generate_registration_options(
+        rp_id=rp_id,rp_name="Bithfy",user_id=str(u["id"]).encode(),user_name=u["email"],user_display_name=u["name"],
+        exclude_credentials=[PublicKeyCredentialDescriptor(id=_b64d(x["credential_id"])) for x in existing],
+        authenticator_selection=AuthenticatorSelectionCriteria(resident_key=ResidentKeyRequirement.PREFERRED,user_verification=UserVerificationRequirement.REQUIRED)
+    )
+    session["reg_challenge"]=_b64e(opts.challenge)
+    return Response(options_to_json(opts),mimetype="application/json")
+
+@app.route("/passkey/register/verify",methods=["POST"])
+@login_required
+def passkey_register_verify():
+    try:
+        rp_id,origin=_rp()
+        v=verify_registration_response(credential=request.get_json(force=True),expected_challenge=_b64d(session.pop("reg_challenge")),
+            expected_rp_id=rp_id,expected_origin=origin,require_user_verification=True)
+        conn=db();cur=conn.cursor()
+        cid=_b64e(v.credential_id)
+        cur.execute("""INSERT INTO passkeys(user_id,credential_id,public_key,sign_count,device_type,backed_up)
+                       VALUES(%s,%s,%s,%s,%s,%s) ON CONFLICT(credential_id) DO NOTHING""",
+                    (session["uid"],cid,psycopg2.Binary(v.credential_public_key),v.sign_count,str(v.credential_device_type),v.credential_backed_up))
+        conn.commit();cur.close();conn.close()
+        return jsonify({"ok":True})
+    except Exception:
+        return jsonify({"ok":False,"error":"Não foi possível validar a passkey."}),400
+
+@app.route("/passkey/login/options",methods=["POST"])
+def passkey_login_options():
+    rp_id,_=_rp()
+    opts=generate_authentication_options(rp_id=rp_id,user_verification=UserVerificationRequirement.REQUIRED)
+    session["auth_challenge"]=_b64e(opts.challenge)
+    return Response(options_to_json(opts),mimetype="application/json")
+
+@app.route("/passkey/login/verify",methods=["POST"])
+def passkey_login_verify():
+    try:
+        data=request.get_json(force=True); cid=data["id"]
+        conn=db();cur=conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute("SELECT * FROM passkeys WHERE credential_id=%s",(cid,));p=cur.fetchone()
+        if not p: cur.close();conn.close();return jsonify({"ok":False,"error":"Passkey não cadastrada."}),404
+        rp_id,origin=_rp()
+        v=verify_authentication_response(credential=data,expected_challenge=_b64d(session.pop("auth_challenge")),
+            expected_rp_id=rp_id,expected_origin=origin,credential_public_key=bytes(p["public_key"]),
+            credential_current_sign_count=p["sign_count"],require_user_verification=True)
+        cur.execute("UPDATE passkeys SET sign_count=%s WHERE id=%s",(v.new_sign_count,p["id"]))
+        conn.commit();cur.close();conn.close()
+        session.clear();session["uid"]=p["user_id"]
+        return jsonify({"ok":True})
+    except Exception:
+        return jsonify({"ok":False,"error":"Falha ao validar Face ID/passkey."}),400
 
 @app.route("/health")
 def health():
@@ -242,7 +424,7 @@ def dashboard():
     cur.execute("SELECT COALESCE(SUM(amount),0) v FROM sales WHERE user_id=%s AND created_at::date=CURRENT_DATE",(uid,)); today=cur.fetchone()["v"]
     cur.execute("SELECT COALESCE(SUM(amount),0) v FROM adjustments WHERE user_id=%s",(uid,)); adj=cur.fetchone()["v"]
     cur.execute("SELECT monthly_goal FROM goals WHERE user_id=%s",(uid,)); g=cur.fetchone(); goal=float(g["monthly_goal"] if g else 10000)
-    cur.execute("SELECT product,platform,amount,created_at FROM sales WHERE user_id=%s ORDER BY created_at DESC LIMIT 12",(uid,)); sales=cur.fetchall()
+    cur.execute("SELECT id,product,platform,amount,created_at FROM sales WHERE user_id=%s ORDER BY created_at DESC LIMIT 12",(uid,)); sales=cur.fetchall()
     labels=[]; values=[]
     for i in range(6,-1,-1):
         d=date.today()-timedelta(days=i); labels.append(d.strftime("%d/%m"))
@@ -266,6 +448,7 @@ def new_sale():
         cur.execute("INSERT INTO sales(user_id,product,platform,amount) VALUES(%s,%s,%s,%s)",
                     (session["uid"],request.form["product"].strip(),request.form["platform"],amount))
         conn.commit(); cur.close(); conn.close()
+        send_push_to_user(session["uid"],"💰 Nova venda na Bithfy",f"{request.form['product'].strip()} • R$ {amount:,.2f}".replace(",", "X").replace(".", ",").replace("X","."),"/")
         flash("Venda registrada com sucesso.")
         return redirect(url_for("dashboard"))
     return render_template_string(FORM)
@@ -309,6 +492,21 @@ def admin():
     cur.execute("SELECT id,name,email,is_admin FROM users ORDER BY created_at DESC"); users=cur.fetchall()
     cur.close(); conn.close()
     return render_template_string(ADMIN,users=users)
+
+@app.route("/admin/sale/<int:sale_id>/delete", methods=["POST"])
+@login_required
+def admin_delete_sale(sale_id):
+    conn=db(); cur=conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cur.execute("SELECT is_admin FROM users WHERE id=%s",(session["uid"],)); me=cur.fetchone()
+    if not me or not me["is_admin"]:
+        cur.close(); conn.close(); return "Acesso negado",403
+    # Admin can delete only a sale belonging to the admin's own account.
+    cur.execute("DELETE FROM sales WHERE id=%s AND user_id=%s RETURNING id",(sale_id,session["uid"]))
+    deleted=cur.fetchone()
+    conn.commit(); cur.close(); conn.close()
+    flash("Venda apagada com sucesso." if deleted else "Venda não encontrada.")
+    return redirect(url_for("dashboard"))
+
 
 @app.route("/admin/adjust", methods=["POST"])
 @login_required
