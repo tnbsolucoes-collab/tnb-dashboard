@@ -83,18 +83,34 @@ app.jinja_env.filters["money"] = money
 BASE_STYLE = """
 <style>
 :root{--bg:#07090a;--card:#101516;--line:#203033;--text:#f4f7f6;--muted:#8e9a98;--green:#28e59b;--cyan:#35d8e6;--danger:#ff6474}
-*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,Arial;background:radial-gradient(circle at top right,#102326 0,#07090a 38%);color:var(--text);min-height:100vh}
-a{color:inherit}.app{display:grid;grid-template-columns:230px 1fr;min-height:100vh}.side{border-right:1px solid var(--line);padding:28px 20px;background:#090d0e}
-.logo{font-weight:900;font-size:22px}.logo span{color:var(--green)}.muted{color:var(--muted)}nav a{display:block;margin:9px 0;padding:13px;border-radius:12px;text-decoration:none;color:#b8c2c0}nav a:hover{background:#13201e;color:var(--green);transform:translateX(3px)}nav a{transition:.2s ease}
-main{padding:30px;max-width:1400px;width:100%}.top{display:flex;justify-content:space-between;gap:15px;align-items:center}.top h1{margin:0;font-size:28px}.btn{display:inline-block;border:0;border-radius:12px;padding:12px 16px;font-weight:800;background:var(--green);color:#042116;cursor:pointer;text-decoration:none}
-.btn.secondary{background:#253032;color:white}.btn.danger{background:#3a1b20;color:#ff8a96}.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin:25px 0}.card,.panel{background:linear-gradient(145deg,#111718,#0d1213);border:1px solid var(--line);border-radius:18px;padding:20px;box-shadow:0 15px 40px #0005}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,Arial;background:
+radial-gradient(circle at 85% 8%,#0a2a55 0,#050b15 30%,#02050a 62%),
+linear-gradient(135deg,#02040a,#06101f);background-attachment:fixed;color:var(--text);min-height:100vh}
+a{color:inherit}.app{display:grid;grid-template-columns:230px 1fr;min-height:100vh}.side{border-right:1px solid var(--line);padding:28px 20px;background:linear-gradient(180deg,#030712,#071426 55%,#02050a)}
+.logo{font-weight:900;font-size:22px}.logo span{color:var(--green)}.muted{color:var(--muted)}nav a{display:block;margin:9px 0;padding:13px;border-radius:12px;text-decoration:none;color:#b8c2c0}nav a:hover{background:#0a2342;color:#63b3ff;transform:translateX(3px)}nav a{transition:.2s ease}
+main{padding:30px;max-width:1400px;width:100%}.top{display:flex;justify-content:space-between;gap:15px;align-items:center}.top h1{margin:0;font-size:28px}.btn{display:inline-block;border:0;border-radius:12px;padding:12px 16px;font-weight:800;background:linear-gradient(135deg,#1478ff,#43a8ff);color:white;box-shadow:0 8px 24px #1478ff33;cursor:pointer;text-decoration:none}
+.btn.secondary{background:#10233c;color:white}.btn.danger{background:#3a1b20;color:#ff8a96}.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin:25px 0}.card,.panel{background:linear-gradient(145deg,#0b1422,#050a12);border:1px solid #16365c;border-radius:18px;padding:20px;box-shadow:0 15px 40px #0005}
 .card label{color:var(--muted);font-size:13px}.value{font-size:27px;font-weight:900;margin-top:8px}.up{font-size:12px;color:var(--green);margin-top:6px}.grid{display:grid;grid-template-columns:2fr 1fr;gap:16px}
-input,select{width:100%;padding:12px;margin:7px 0 13px;border-radius:10px;border:1px solid #2b383a;background:#080c0d;color:white}.sale{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid #1b2425}.sale b{color:var(--green)}
-.goal{height:11px;background:#1a2223;border-radius:20px;overflow:hidden}.goal i{display:block;height:100%;background:linear-gradient(90deg,var(--green),var(--cyan))}
+input,select{width:100%;padding:12px;margin:7px 0 13px;border-radius:10px;border:1px solid #1c4778;background:#050b14;color:white}.sale{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid #102b4a}.sale b{color:var(--green)}
+.goal{height:11px;background:#0b1a2c;border-radius:20px;overflow:hidden}.goal i{display:block;height:100%;background:linear-gradient(90deg,#1478ff,#63c5ff)}
 .auth{max-width:430px;margin:8vh auto;padding:28px}.auth .logo{text-align:center;margin-bottom:24px}.flash{padding:12px;border:1px solid #5c3b3f;background:#261417;border-radius:10px;margin:10px 0}.badge{font-size:11px;padding:5px 8px;border:1px solid var(--line);border-radius:999px;color:var(--muted)}
-@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}@keyframes glow{0%,100%{box-shadow:0 0 0 #28e59b00}50%{box-shadow:0 0 28px #28e59b22}}.card,.panel{animation:rise .45s ease both}.card:hover{transform:translateY(-3px);border-color:#2f5d52;transition:.2s}.goal i{animation:glow 1.8s ease infinite;transition:width .8s ease}
+@keyframes rise{from{opacity:0;transform:translateY(18px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}@keyframes glow{0%,100%{box-shadow:0 0 5px #258cff33}50%{box-shadow:0 0 30px #258cff88}}@keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}@keyframes shine{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}.card,.panel{animation:rise .55s cubic-bezier(.2,.8,.2,1) both;transition:transform .25s ease,border-color .25s ease,box-shadow .25s ease}.card:nth-child(2){animation-delay:.07s}.card:nth-child(3){animation-delay:.14s}.card:nth-child(4){animation-delay:.21s}.card:hover,.panel:hover{transform:translateY(-5px);border-color:#258cff;box-shadow:0 18px 45px #006dff22}.btn{transition:transform .2s ease,box-shadow .2s ease,filter .2s ease}.btn:hover{transform:translateY(-2px) scale(1.02);box-shadow:0 10px 28px #1478ff55;filter:brightness(1.08)}.goal i{animation:glow 1.8s ease infinite;transition:width .8s ease}.logo span{animation:glow 2.2s ease infinite}.top h1{background:linear-gradient(90deg,#fff,#66b9ff,#fff);background-size:200% auto;-webkit-background-clip:text;background-clip:text;color:transparent;animation:shine 5s linear infinite}
 @media(max-width:900px){.app{grid-template-columns:1fr}.side{display:none}.cards{grid-template-columns:1fr 1fr}.grid{grid-template-columns:1fr}main{padding:18px}}
 @media(max-width:520px){.cards{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column}.top h1{font-size:23px}}
+@media(max-width:900px){
+.sidebar{display:block;transform:translateX(-110%);transition:transform .3s ease;z-index:1001;box-shadow:18px 0 50px #0009}
+.sidebar.open{transform:translateX(0)}
+.main{margin-left:0;padding:72px 18px 18px}.cards{grid-template-columns:1fr 1fr}.split{grid-template-columns:1fr}
+.menu-toggle{display:flex}
+.menu-overlay{display:block;position:fixed;inset:0;background:#0009;opacity:0;visibility:hidden;transition:.3s;z-index:1000;backdrop-filter:blur(3px)}
+.menu-overlay.show{opacity:1;visibility:visible}
+}
+@media(min-width:901px){.menu-toggle,.menu-overlay{display:none!important}}
+.menu-toggle{position:fixed;top:14px;left:14px;width:46px;height:46px;border:1px solid #1c4778;border-radius:12px;background:#071426;color:#fff;z-index:1002;align-items:center;justify-content:center;flex-direction:column;gap:5px;cursor:pointer;box-shadow:0 8px 30px #0008}
+.menu-toggle span{display:block;width:22px;height:2px;background:#63b3ff;border-radius:3px;transition:.25s}
+.menu-toggle.active span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+.menu-toggle.active span:nth-child(2){opacity:0}
+.menu-toggle.active span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
 </style>
 """
 
@@ -121,7 +137,7 @@ DASH = """<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="vi
 <div class="panel"><h3>Meta do mês</h3><div class="value">{{month_sales|money}} / {{goal|money}}</div><p class="muted">{{pct}}% concluída</p><div class="goal"><i style="width:{{pct}}%"></i></div></div></section>
 <section class="panel" style="margin-top:16px"><h3>Vendas recentes</h3>{% for s in sales %}<div class="sale"><span>{{s.product}} <small class="muted">• {{s.platform}} • {{s.created_at.strftime('%d/%m %H:%M')}}</small></span><b>+ {{s.amount|money}}</b></div>{% else %}<p class="muted">Nenhuma venda cadastrada ainda.</p>{% endfor %}</section>
 </main></div><script src="https://cdn.jsdelivr.net/npm/chart.js"></script><script>
-new Chart(document.getElementById('chart'),{type:'line',data:{labels:{{labels|safe}},datasets:[{data:{{values|safe}},borderColor:'#28e59b',backgroundColor:'#28e59b22',fill:true,tension:.4}]},options:{plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#8e9a98'},grid:{display:false}},y:{ticks:{color:'#8e9a98'},grid:{color:'#1c2728'}}}}});
+new Chart(document.getElementById('chart'),{type:'line',data:{labels:{{labels|safe}},datasets:[{data:{{values|safe}},borderColor:'#258cff',backgroundColor:'#258cff22',fill:true,tension:.4}]},options:{plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#8e9a98'},grid:{display:false}},y:{ticks:{color:'#8e9a98'},grid:{color:'#102b4a'}}}}});
 document.querySelectorAll('.value').forEach((el,i)=>{el.style.animation=`rise .45s ease ${i*.07}s both`;});
 </script></html>"""
 
