@@ -1,4 +1,4 @@
-import os
+=import os
 from datetime import datetime, date, timedelta
 from functools import wraps
 from flask import Flask, request, redirect, url_for, session, flash, render_template_string, jsonify, Response
@@ -538,7 +538,11 @@ def site_edit(project_id):
     if request.method=="POST":
         v=_site_form_values()
         if not v["client_name"] or not v["project_name"]: cur.close(); conn.close(); flash("Informe o cliente e o projeto."); return redirect(url_for("site_edit",project_id=project_id))
+        old_status = p["status"]
         cur.execute("""UPDATE site_projects SET client_name=%s,project_name=%s,project_value=%s,domain_url=%s,deadline=%s,monthly_maintenance=%s,status=%s,updated_at=NOW() WHERE id=%s AND user_id=%s""",(v["client_name"],v["project_name"],v["project_value"],v["domain_url"],v["deadline"],v["monthly_maintenance"],v["status"],project_id,uid)); conn.commit(); cur.close(); conn.close()
+        if old_status != "Pago" and v["status"] == "Pago":
+            valor = money(v["project_value"])
+            send_push_to_user(uid, "💰 Pagamento confirmado", f'{v["project_name"]} — {valor} • Cliente: {v["client_name"]}', "/sites")
         flash("Projeto atualizado."); return redirect(url_for("sites"))
     cur.close(); conn.close(); return render_template_string(SITE_FORM,title="Editar site / cliente",button="Salvar alterações",p=p,statuses=SITE_STATUSES)
 
