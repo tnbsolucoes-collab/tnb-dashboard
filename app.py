@@ -145,6 +145,14 @@ input,select{width:100%;padding:12px;margin:7px 0 13px;border-radius:9px;border:
 @media(min-width:901px){.menu-toggle,.menu-overlay{display:none!important}}
 @media(max-width:560px){.cards,.mini-cards{grid-template-columns:1fr 1fr;gap:9px}.card{padding:14px;min-height:118px}.value{font-size:21px}.top{align-items:flex-start;flex-direction:column}.top h1{font-size:25px}.topactions{width:100%}.topactions .btn{flex:1;font-size:11px;padding:10px 7px}.panel{padding:14px}.sale{align-items:flex-start;flex-direction:column}.legendbox{display:none}}
 @media(max-width:370px){.cards,.mini-cards{grid-template-columns:1fr}}
+
+/* Ghost 2.0 visual refresh */
+:root{--green:#20ef8b;--green2:#0ecf72;--cyan:#31c8ff}
+.brand{padding-top:2px}.ghostmark{background:transparent;width:45px;height:45px;font-size:34px;filter:drop-shadow(0 0 12px rgba(32,239,139,.55));box-shadow:none}.brandname{font-size:23px}.side nav .sale-nav{background:linear-gradient(135deg,#20ef8b,#16dca4);color:#03120b;border-left:0;font-weight:900}.side nav .sale-nav:hover{filter:brightness(1.08)}
+.searchbox{position:relative;width:min(620px,70vw);padding:0;background:#080d0a}.searchbox input{margin:0;border:0;background:transparent;padding:14px 46px 14px 42px;outline:0}.search-icon{position:absolute;left:15px;top:13px;color:#aeb8b2}.shortcut{position:absolute;right:10px;top:9px;padding:5px 8px;border:1px solid #24352c;border-radius:7px;color:#a9b2ad;font-size:11px}.search-results{position:absolute;left:0;right:0;top:52px;background:#080d0a;border:1px solid #1c3025;border-radius:10px;box-shadow:0 20px 45px #000b;z-index:20;display:none;overflow:hidden}.search-results.show{display:block}.search-item{display:block;padding:11px 14px;text-decoration:none;color:#dfe5e1;border-bottom:1px solid #132019}.search-item:last-child{border:0}.search-item:hover,.search-item.active{background:#0f1c15;color:var(--green)}
+.periods{display:flex;gap:6px;flex-wrap:wrap}.period-btn{border:1px solid #294035;background:#09100c;color:#aab4ae;border-radius:999px;padding:7px 11px;font-size:11px;cursor:pointer}.period-btn.active{background:var(--green);color:#021008;border-color:var(--green);font-weight:900}.accent-cyan{color:var(--cyan)}
+.quote{min-height:210px;position:relative;overflow:hidden;padding:26px;background:radial-gradient(circle at 83% 55%,rgba(32,239,139,.22),transparent 26%),linear-gradient(135deg,#101916,#06100b)}.quote:after{content:'👻';position:absolute;right:7%;bottom:-15px;font-size:128px;filter:drop-shadow(0 0 22px rgba(32,239,139,.45));opacity:.95}.quote strong{z-index:1;font-size:31px}.top{justify-content:flex-start}.profile-dot{margin-left:auto;width:43px;height:43px;border:2px solid var(--green);border-radius:50%;display:grid;place-items:center;font-weight:900;background:#0a120e}
+@media(max-width:900px){.searchrow{display:flex}.searchbox{width:100%}.shortcut{display:none}.profile-dot{display:none}}
 </style>
 """
 
@@ -177,20 +185,17 @@ DASH = """<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="vi
 <button class="menu-toggle" id="menuToggle" type="button" aria-label="Abrir menu"><span></span><span></span><span></span></button><div class="menu-overlay" id="menuOverlay"></div>
 <div class="app">
 <aside class="side">
- <div class="brand"><div class="ghostmark">◕</div><div><div class="brandname">GHOST</div><div class="brandsub">BUSINESS DASHBOARD</div></div></div>
+ <div class="brand"><div class="ghostmark">👻</div><div><div class="brandname">GHOST</div><div class="brandsub">BUSINESS DASHBOARD</div></div></div>
  <nav>
-  <a class="nav-active" href="/">⌂ Visão Geral</a><a href="/sites">▣ Projetos</a><a href="/sites">♟ Clientes</a>
-  <a href="/sale/new">🛒 Vendas</a><a href="/integrations">▧ Mídias</a><a href="/goal">◉ Financeiro</a>
-  <a href="/integrations">⌁ Integrações</a>{% if is_admin %}<a href="/admin">♛ Administração</a>{% endif %}<a href="/logout">↪ Sair</a>
+  <a class="nav-active" href="/">⌂ Visão Geral</a><a href="/sites">▣ Projetos</a><a href="/sites">♟ Clientes</a><a href="/sale/new">🛒 Vendas</a>
+  <a class="sale-nav" href="/sale/new">＋ Registrar venda</a><a href="/integrations">▧ Mídias</a><a href="/goal">▥ Financeiro</a><a href="/integrations">🔗 Integrações</a>
+  <a href="#" id="notifyBtn">🔔 Notificações</a><a href="#" id="passkeyBtn">◉ Face ID</a>{% if is_admin %}<a href="/admin">♛ Administração</a>{% endif %}<a href="/logout">↪ Sair</a>
  </nav>
  <div class="legendbox"><b>♛ Modo Lenda</b><p>Disciplina hoje,<br>liberdade sempre.</p></div>
 </aside>
 <main>
- <div class="searchrow"><div class="searchbox">⌕ &nbsp; Buscar algo no painel...</div></div>
- <div class="top">
-  <div><span class="badge">{% if is_admin %}ADMIN{% else %}USUÁRIO{% endif %}</span><h1>Salve, {{name}}!</h1><div class="subtitle">Disciplina hoje, liberdade sempre.</div></div>
-  <div class="topactions"><button class="btn secondary" id="notifyBtn" type="button">🔔 Notificações</button><button class="btn secondary" id="passkeyBtn" type="button">🔐 Face ID</button><a class="btn" href="/sale/new">+ Registrar venda</a></div>
- </div>
+ <div class="searchrow"><div class="searchbox"><span class="search-icon">⌕</span><input id="panelSearch" autocomplete="off" placeholder="Buscar algo no painel..."><span class="shortcut">Ctrl + K</span><div class="search-results" id="searchResults"></div></div></div>
+ <div class="top"><div><h1>Salve, {{name}}!</h1><div class="subtitle">Disciplina hoje, liberdade sempre.</div></div><div class="profile-dot">{{name[:2]|upper}}</div></div>
  {% with ms=get_flashed_messages() %}{% for m in ms %}<div class="flash">{{m}}</div>{% endfor %}{% endwith %}
  <section class="cards">
   <div class="card"><div class="cardtop"><div class="metricicon">＄</div><label>Saldo total</label></div><div class="value">{{total|money}}</div><div class="up">{{count}} vendas no mês</div></div>
@@ -199,42 +204,27 @@ DASH = """<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="vi
   <div class="card"><div class="cardtop"><div class="metricicon">◎</div><label>Meta mensal</label></div><div class="value">{{goal|money}}</div><div class="goal"><i style="width:{{pct}}%"></i></div><div class="up">{{pct}}% concluída</div></div>
  </section>
  <section class="dashboard-grid">
-  <div class="panel"><div class="panelhead"><div><h3>Faturamento</h3><p class="muted">Acompanhe seus ganhos ao longo do tempo.</p></div><span class="badge">30 DIAS</span></div><canvas id="chart" height="120"></canvas></div>
-  <div class="panel"><div class="panelhead"><div><h3>⚡ Mídias</h3><p class="muted">Central das suas redes.</p></div></div>
-   <div class="media-list">
-    <div class="media-row"><div class="media-icon">♪</div><div><b>TikTok</b><small>Integração futura</small></div><span class="status-off">Não conectado</span></div>
-    <div class="media-row"><div class="media-icon">◎</div><div><b>Instagram</b><small>Integração futura</small></div><span class="status-off">Não conectado</span></div>
-    <div class="media-row"><div class="media-icon">▶</div><div><b>YouTube</b><small>Integração futura</small></div><span class="status-off">Não conectado</span></div>
-    <div class="media-row"><div class="media-icon">➤</div><div><b>Telegram</b><small>Integração futura</small></div><span class="status-off">Não conectado</span></div>
-   </div>
-  </div>
+  <div class="panel"><div class="panelhead"><div><h3>Faturamento</h3><p class="muted">Acompanhe seus ganhos ao longo do tempo.</p></div><div class="periods"><button class="period-btn" data-period="today">Hoje</button><button class="period-btn" data-period="7">7 dias</button><button class="period-btn" data-period="20">20 dias</button><button class="period-btn active" data-period="30">30 dias</button></div></div><canvas id="chart" height="120"></canvas></div>
+  <div class="panel"><div class="panelhead"><div><h3>⚡ Mídias</h3><p class="muted">Central das suas redes.</p></div></div><div class="media-list">
+   <div class="media-row"><div class="media-icon">♪</div><div><b>TikTok</b><small>Integração futura</small></div><span class="status-off">Não conectado</span></div><div class="media-row"><div class="media-icon">◎</div><div><b>Instagram</b><small>Integração futura</small></div><span class="status-off">Não conectado</span></div><div class="media-row"><div class="media-icon">▶</div><div><b>YouTube</b><small>Integração futura</small></div><span class="status-off">Não conectado</span></div><div class="media-row"><div class="media-icon">➤</div><div><b>Telegram</b><small>Integração futura</small></div><span class="status-off">Não conectado</span></div>
+  </div></div>
  </section>
- <section class="mini-cards">
-  <div class="card mini"><label>🌐 Sites vendidos</label><div class="value">{{sites_paid}}</div><div class="up">{{sites_count}} projetos cadastrados</div></div>
-  <div class="card mini"><label>♟ Clientes</label><div class="value">{{clients_count}}</div><div class="up">Clientes no painel</div></div>
-  <div class="card mini"><label>◉ Receita média</label><div class="value">{{avg_sale|money}}</div><div class="up">Por venda registrada</div></div>
-  <div class="card mini"><label>＋ Ajustes</label><div class="value">{{adjustments|money}}</div><div class="up">Separado das vendas</div></div>
- </section>
- <section class="bottom-grid">
-  <div class="panel"><div class="panelhead"><h3>🛒 Últimas vendas</h3><a href="/sale/new" class="muted">Nova →</a></div>
-   {% for s in sales[:5] %}<div class="sale"><span><b style="color:#fff">{{s.product}}</b><small class="muted" style="display:block">{{s.platform}} • {{s.created_at.strftime('%d/%m %H:%M')}}</small></span><b>+ {{s.amount|money}}</b></div>{% else %}<p class="muted">Nenhuma venda cadastrada ainda.</p>{% endfor %}
-  </div>
-  <div class="panel"><div class="panelhead"><h3>▣ Projetos em andamento</h3><a href="/sites" class="muted">Ver todos →</a></div>
-   {% for p in projects %}<div class="project-row"><div class="project-line"><span><b>{{p.project_name}}</b><br><small class="muted">{{p.client_name}}</small></span><span class="muted">{{p.status}}</span></div><div class="progress"><i style="width:{{p.progress}}%"></i></div></div>{% else %}<p class="muted">Nenhum projeto cadastrado ainda.</p>{% endfor %}
-  </div>
-  <div class="panel quote"><strong>Build<br>in silence.<br><span>Let the<br>numbers speak.</span></strong></div>
- </section>
+ <section class="mini-cards"><div class="card mini"><label>🌐 Sites vendidos</label><div class="value">{{sites_paid}}</div><div class="up">{{sites_count}} projetos cadastrados</div></div><div class="card mini"><label>♟ Clientes</label><div class="value">{{clients_count}}</div><div class="up">Clientes no painel</div></div><div class="card mini"><label>▥ Receita média</label><div class="value">{{avg_sale|money}}</div><div class="up">Por venda registrada</div></div><div class="card mini"><label>↔ Ajustes</label><div class="value">{{adjustments|money}}</div><div class="up">Separado das vendas</div></div></section>
+ <section class="bottom-grid"><div class="panel"><div class="panelhead"><h3>🛒 Últimas vendas</h3><a href="/sale/new" class="accent-cyan">Nova →</a></div>{% for s in sales[:5] %}<div class="sale"><span><b style="color:#fff">{{s.product}}</b><small class="muted" style="display:block">{{s.platform}} • {{s.created_at.strftime('%d/%m %H:%M')}}</small></span><b>+ {{s.amount|money}}</b></div>{% else %}<p class="muted">Nenhuma venda cadastrada ainda.</p>{% endfor %}</div><div class="panel"><div class="panelhead"><h3>▣ Projetos em andamento</h3><a href="/sites" class="accent-cyan">Ver todos →</a></div>{% for p in projects %}<div class="project-row"><div class="project-line"><span><b>{{p.project_name}}</b><br><small class="muted">{{p.client_name}}</small></span><span class="muted">{{p.status}}</span></div><div class="progress"><i style="width:{{p.progress}}%"></i></div></div>{% else %}<p class="muted">Nenhum projeto cadastrado ainda.</p>{% endfor %}</div><div class="panel quote"><strong>Build<br>in silence.<br><span>Let the<br>numbers speak.</span></strong></div></section>
 </main></div>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script><script>
-new Chart(document.getElementById('chart'),{type:'line',data:{labels:{{labels|safe}},datasets:[{data:{{values|safe}},borderColor:'#39f58a',backgroundColor:'rgba(57,245,138,.10)',fill:true,tension:.42,borderWidth:2,pointRadius:0}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#7f8b84',maxTicksLimit:8},grid:{display:false}},y:{ticks:{color:'#7f8b84'},grid:{color:'#142018'}}}}});
-(function(){const b=document.getElementById('menuToggle'),s=document.querySelector('.side'),o=document.getElementById('menuOverlay');if(!b||!s||!o)return;function menu(x){s.classList.toggle('open',x);o.classList.toggle('show',x);document.body.style.overflow=x?'hidden':''}b.onclick=()=>menu(!s.classList.contains('open'));o.onclick=()=>menu(false);s.querySelectorAll('a').forEach(a=>a.onclick=()=>menu(false))})();
+const chartSets={{chart_sets|safe}};
+const ctx=document.getElementById('chart');
+const chart=new Chart(ctx,{type:'line',data:{labels:chartSets['30'].labels,datasets:[{data:chartSets['30'].values,borderColor:'#20ef8b',backgroundColor:'rgba(32,239,139,.08)',fill:true,tension:.42,borderWidth:2,pointRadius:2,pointBackgroundColor:'#20ef8b'}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#7f8b84',maxTicksLimit:8},grid:{color:'#101b15'}},y:{ticks:{color:'#7f8b84'},grid:{color:'#142018'}}}}});
+document.querySelectorAll('.period-btn').forEach(b=>b.onclick=()=>{document.querySelectorAll('.period-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');const d=chartSets[b.dataset.period];chart.data.labels=d.labels;chart.data.datasets[0].data=d.values;chart.update();});
+const searchItems=[['Visão Geral','/'],['Projetos','/sites'],['Clientes','/sites'],['Vendas','/sale/new'],['Registrar venda','/sale/new'],['Mídias','/integrations'],['Financeiro','/goal'],['Integrações','/integrations'],['Notificações','#notify'],['Face ID','#faceid']{% if is_admin %},['Administração','/admin']{% endif %}];
+const inp=document.getElementById('panelSearch'),res=document.getElementById('searchResults');function renderSearch(){const q=inp.value.trim().toLowerCase();const list=(q?searchItems.filter(x=>x[0].toLowerCase().includes(q)):searchItems).slice(0,8);res.innerHTML=list.map(x=>`<a class="search-item" href="${x[1]}">${x[0]}</a>`).join('');res.classList.toggle('show',!!list.length&&(document.activeElement===inp));res.querySelectorAll('a').forEach(a=>a.onclick=e=>{if(a.getAttribute('href')==='#notify'){e.preventDefault();document.getElementById('notifyBtn').click()}if(a.getAttribute('href')==='#faceid'){e.preventDefault();document.getElementById('passkeyBtn').click()}})}inp.oninput=renderSearch;inp.onfocus=renderSearch;document.addEventListener('click',e=>{if(!e.target.closest('.searchbox'))res.classList.remove('show')});document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();inp.focus();renderSearch()}if(e.key==='Escape'){res.classList.remove('show');inp.blur()}});
+(function(){const b=document.getElementById('menuToggle'),s=document.querySelector('.side'),o=document.getElementById('menuOverlay');if(!b||!s||!o)return;function menu(x){s.classList.toggle('open',x);o.classList.toggle('show',x);document.body.style.overflow=x?'hidden':''}b.onclick=()=>menu(!s.classList.contains('open'));o.onclick=()=>menu(false);s.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>menu(false)))})();
 if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js');}
-function b64urlToBuf(v){v=v.replace(/-/g,'+').replace(/_/g,'/');while(v.length%4)v+='=';return Uint8Array.from(atob(v),c=>c.charCodeAt(0))}
-function bufToB64url(buf){return btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
-const notifyBtn=document.getElementById('notifyBtn');if(notifyBtn)notifyBtn.onclick=async()=>{try{const reg=await navigator.serviceWorker.ready;const permission=await Notification.requestPermission();if(permission!=='granted')return alert('Permissão de notificações não concedida.');const r=await fetch('/push/public-key');const j=await r.json();if(!j.publicKey)return alert('Notificações ainda precisam das chaves VAPID no Render.');const sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64urlToBuf(j.publicKey)});await fetch('/push/subscribe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(sub)});alert('Notificações ativadas neste aparelho.')}catch(e){alert('Não foi possível ativar notificações neste aparelho.')}};
-const passkeyBtn=document.getElementById('passkeyBtn');if(passkeyBtn)passkeyBtn.onclick=async()=>{try{let r=await fetch('/passkey/register/options',{method:'POST'});let o=await r.json();o.challenge=b64urlToBuf(o.challenge);o.user.id=b64urlToBuf(o.user.id);if(o.excludeCredentials)o.excludeCredentials=o.excludeCredentials.map(x=>({...x,id:b64urlToBuf(x.id)}));const cred=await navigator.credentials.create({publicKey:o});const body={id:cred.id,rawId:bufToB64url(cred.rawId),type:cred.type,response:{clientDataJSON:bufToB64url(cred.response.clientDataJSON),attestationObject:bufToB64url(cred.response.attestationObject)}};r=await fetch('/passkey/register/verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const j=await r.json();alert(j.ok?'Face ID/passkey ativado para acesso rápido.':(j.error||'Falha ao ativar.'))}catch(e){alert('Face ID/passkey não foi ativado.')}};
+function b64urlToBuf(v){v=v.replace(/-/g,'+').replace(/_/g,'/');while(v.length%4)v+='=';return Uint8Array.from(atob(v),c=>c.charCodeAt(0))}function bufToB64url(buf){return btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
+const notifyBtn=document.getElementById('notifyBtn');if(notifyBtn)notifyBtn.onclick=async(e)=>{e&&e.preventDefault();try{const reg=await navigator.serviceWorker.ready;const permission=await Notification.requestPermission();if(permission!=='granted')return alert('Permissão de notificações não concedida.');const r=await fetch('/push/public-key');const j=await r.json();if(!j.publicKey)return alert('Notificações ainda precisam das chaves VAPID no Render.');const sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64urlToBuf(j.publicKey)});await fetch('/push/subscribe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(sub)});alert('Notificações ativadas neste aparelho.')}catch(e){alert('Não foi possível ativar notificações neste aparelho.')}};
+const passkeyBtn=document.getElementById('passkeyBtn');if(passkeyBtn)passkeyBtn.onclick=async(e)=>{e&&e.preventDefault();try{let r=await fetch('/passkey/register/options',{method:'POST'});let o=await r.json();o.challenge=b64urlToBuf(o.challenge);o.user.id=b64urlToBuf(o.user.id);if(o.excludeCredentials)o.excludeCredentials=o.excludeCredentials.map(x=>({...x,id:b64urlToBuf(x.id)}));const cred=await navigator.credentials.create({publicKey:o});const body={id:cred.id,rawId:bufToB64url(cred.rawId),type:cred.type,response:{clientDataJSON:bufToB64url(cred.response.clientDataJSON),attestationObject:bufToB64url(cred.response.attestationObject)}};r=await fetch('/passkey/register/verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const j=await r.json();alert(j.ok?'Face ID/passkey ativado para acesso rápido.':(j.error||'Falha ao ativar.'))}catch(e){alert('Face ID/passkey não foi ativado.')}};
 </script></html>"""
-
 FORM = """<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Registrar venda</title>""" + BASE_STYLE + """
 <div class="auth panel"><div class="logo">GHOST<span>.</span></div><h2>Registrar venda</h2>
 <form method="post"><label>Produto</label><input name="product" required maxlength="180"><label>Valor (R$)</label><input name="amount" type="number" min="0.01" step="0.01" required>
@@ -455,11 +445,20 @@ def dashboard():
                           COUNT(*) FILTER (WHERE status='Pago') paid,
                           COUNT(DISTINCT client_name) clients
                    FROM site_projects WHERE user_id=%s""",(uid,)); ps=cur.fetchone()
-    labels=[]; values=[]
-    for i in range(29,-1,-1):
-        d=date.today()-timedelta(days=i); labels.append(d.strftime("%d/%m"))
-        cur.execute("SELECT COALESCE(SUM(amount),0) v FROM sales WHERE user_id=%s AND created_at::date=%s",(uid,d))
-        values.append(float(cur.fetchone()["v"]))
+    def period_data(days):
+        labs=[]; vals=[]
+        for i in range(days-1,-1,-1):
+            d=date.today()-timedelta(days=i); labs.append(d.strftime("%d/%m"))
+            cur.execute("SELECT COALESCE(SUM(amount),0) v FROM sales WHERE user_id=%s AND created_at::date=%s",(uid,d))
+            vals.append(float(cur.fetchone()["v"]))
+        return {"labels":labs,"values":vals}
+    chart_sets={"7":period_data(7),"20":period_data(20),"30":period_data(30)}
+    today_labels=[]; today_values=[]
+    for h in range(24):
+        today_labels.append(f"{h:02d}:00")
+        cur.execute("SELECT COALESCE(SUM(amount),0) v FROM sales WHERE user_id=%s AND created_at::date=CURRENT_DATE AND EXTRACT(HOUR FROM created_at)=%s",(uid,h))
+        today_values.append(float(cur.fetchone()["v"]))
+    chart_sets["today"]={"labels":today_labels,"values":today_values}
     cur.close(); conn.close()
     month=float(m["v"]); adjustments=float(adj); pct=min(100,round((month/goal*100) if goal else 0,1))
     progress_map={"Orçamento":15,"Em produção":55,"Aguardando pagamento":80,"Pago":100,"Publicado":100}
@@ -467,7 +466,7 @@ def dashboard():
     avg_sale=(month/float(m["c"])) if m["c"] else 0
     return render_template_string(DASH,name=u["name"],is_admin=u["is_admin"],today=float(today),month_sales=month,
         adjustments=adjustments,total=month+adjustments,count=m["c"],goal=goal,pct=pct,sales=sales,
-        labels=json.dumps(labels),values=json.dumps(values),projects=projects,sites_count=ps["count"],
+        chart_sets=json.dumps(chart_sets),projects=projects,sites_count=ps["count"],
         sites_paid=ps["paid"],clients_count=ps["clients"],avg_sale=avg_sale)
 
 @app.route("/sale/new", methods=["GET","POST"])
