@@ -126,41 +126,120 @@ app.jinja_env.filters["money"] = money
 
 BASE_STYLE = """
 <style>
-:root{--bg:#07090a;--card:#101516;--line:#203033;--text:#f4f7f6;--muted:#8e9a98;--green:#28e59b;--cyan:#35d8e6;--danger:#ff6474}
-*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,Arial;background:
-radial-gradient(circle at 85% 8%,#0a2a55 0,#050b15 30%,#02050a 62%),
-linear-gradient(135deg,#02040a,#06101f);background-attachment:fixed;color:var(--text);min-height:100vh}
-a{color:inherit}.app{display:grid;grid-template-columns:230px 1fr;min-height:100vh}.side{border-right:1px solid var(--line);padding:28px 20px;background:linear-gradient(180deg,#030712,#071426 55%,#02050a)}
-.logo{font-weight:900;font-size:22px}.logo span{color:var(--green)}.muted{color:var(--muted)}nav a{display:block;margin:9px 0;padding:13px;border-radius:12px;text-decoration:none;color:#b8c2c0}nav a:hover{background:#0a2342;color:#63b3ff;transform:translateX(3px)}nav a{transition:.2s ease}
-main{padding:30px;max-width:1400px;width:100%}.top{display:flex;justify-content:space-between;gap:15px;align-items:center}.top h1{margin:0;font-size:28px}.btn{display:inline-block;border:0;border-radius:12px;padding:12px 16px;font-weight:800;background:linear-gradient(135deg,#1478ff,#43a8ff);color:white;box-shadow:0 8px 24px #1478ff33;cursor:pointer;text-decoration:none}
-.btn.secondary{background:#10233c;color:white}.btn.danger{background:#3a1b20;color:#ff8a96}.btn.small{padding:8px 10px;font-size:12px}.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin:25px 0}.card,.panel{background:linear-gradient(145deg,#0b1422,#050a12);border:1px solid #16365c;border-radius:18px;padding:20px;box-shadow:0 15px 40px #0005}
-.card label{color:var(--muted);font-size:13px}.value{font-size:27px;font-weight:900;margin-top:8px}.up{font-size:12px;color:var(--green);margin-top:6px}.grid{display:grid;grid-template-columns:2fr 1fr;gap:16px}
-input,select{width:100%;padding:12px;margin:7px 0 13px;border-radius:10px;border:1px solid #1c4778;background:#050b14;color:white}.sale{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid #102b4a}.sale b{color:var(--green)}
-.goal{height:11px;background:#0b1a2c;border-radius:20px;overflow:hidden}.goal i{display:block;height:100%;background:linear-gradient(90deg,#1478ff,#63c5ff)}
-.auth{max-width:430px;margin:8vh auto;padding:28px}.auth .logo{text-align:center;margin-bottom:24px}.flash{padding:12px;border:1px solid #5c3b3f;background:#261417;border-radius:10px;margin:10px 0}.badge{font-size:11px;padding:5px 8px;border:1px solid var(--line);border-radius:999px;color:var(--muted)}
-@keyframes rise{from{opacity:0;transform:translateY(18px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}@keyframes glow{0%,100%{box-shadow:0 0 5px #258cff33}50%{box-shadow:0 0 30px #258cff88}}@keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}@keyframes shine{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}.card,.panel{animation:rise .55s cubic-bezier(.2,.8,.2,1) both;transition:transform .25s ease,border-color .25s ease,box-shadow .25s ease}.card:nth-child(2){animation-delay:.07s}.card:nth-child(3){animation-delay:.14s}.card:nth-child(4){animation-delay:.21s}.card:hover,.panel:hover{transform:translateY(-5px);border-color:#258cff;box-shadow:0 18px 45px #006dff22}.btn{transition:transform .2s ease,box-shadow .2s ease,filter .2s ease}.btn:hover{transform:translateY(-2px) scale(1.02);box-shadow:0 10px 28px #1478ff55;filter:brightness(1.08)}.goal i{animation:glow 1.8s ease infinite;transition:width .8s ease}.logo span{animation:glow 2.2s ease infinite}.top h1{background:linear-gradient(90deg,#fff,#66b9ff,#fff);background-size:200% auto;-webkit-background-clip:text;background-clip:text;color:transparent;animation:shine 5s linear infinite}
-@media(max-width:900px){.app{grid-template-columns:1fr}.side{display:none}.cards{grid-template-columns:1fr 1fr}.grid{grid-template-columns:1fr}main{padding:18px}}
-@media(max-width:520px){.cards{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column}.top h1{font-size:23px}}
-@media(max-width:900px){
-.app{display:block}
-.side{display:block;position:fixed;top:0;left:0;width:260px;height:100vh;overflow-y:auto;transform:translateX(-110%);transition:transform .3s ease;z-index:1001;box-shadow:18px 0 50px #0009}
-.side.open{transform:translateX(0)}
-main{margin-left:0;padding:76px 18px 18px}.cards{grid-template-columns:1fr 1fr}.grid{grid-template-columns:1fr}
-.menu-toggle{display:flex}
-.menu-overlay{display:block;position:fixed;inset:0;background:#0009;opacity:0;visibility:hidden;transition:.3s;z-index:1000;backdrop-filter:blur(3px)}
-.menu-overlay.show{opacity:1;visibility:visible}
+:root{
+ --bg:#030504;--panel:#090d0b;--panel2:#0d1310;--line:#1b2921;
+ --text:#f4f7f5;--muted:#849089;--green:#39f58a;--green2:#12c968;
+ --danger:#ff6572;--shadow:0 22px 70px rgba(0,0,0,.48)
 }
-@media(min-width:901px){.menu-toggle,.menu-overlay{display:none!important}}
-.menu-toggle{position:fixed;top:14px;left:14px;width:46px;height:46px;border:1px solid #1c4778;border-radius:12px;background:#071426;color:#fff;z-index:1002;align-items:center;justify-content:center;flex-direction:column;gap:5px;cursor:pointer;box-shadow:0 8px 30px #0008}
-.menu-toggle span{display:block;width:22px;height:2px;background:#63b3ff;border-radius:3px;transition:.25s}
+*{box-sizing:border-box}
+html{background:#020302}
+body{
+ margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial;
+ color:var(--text);min-height:100vh;
+ background:
+ radial-gradient(circle at 72% -10%,rgba(31,255,126,.08),transparent 28%),
+ radial-gradient(circle at 18% 15%,rgba(31,255,126,.035),transparent 22%),
+ linear-gradient(145deg,#020302,#050806 48%,#020302);
+ background-attachment:fixed
+}
+a{color:inherit}
+.app{display:grid;grid-template-columns:245px 1fr;min-height:100vh}
+.side{
+ position:relative;border-right:1px solid #152019;padding:30px 20px;
+ background:linear-gradient(180deg,rgba(7,11,9,.98),rgba(3,5,4,.99));
+ box-shadow:16px 0 55px rgba(0,0,0,.2)
+}
+.side:after{content:"";position:absolute;top:0;right:-1px;width:1px;height:190px;background:linear-gradient(var(--green),transparent);opacity:.45}
+.logo{font-weight:950;font-size:24px;letter-spacing:3px;text-transform:uppercase}
+.logo:before{content:"◉";font-size:15px;margin-right:10px;color:var(--green);filter:drop-shadow(0 0 8px rgba(57,245,138,.65))}
+.logo span{color:var(--green)}
+.muted{color:var(--muted)}
+nav{margin-top:26px}
+nav a{
+ display:flex;align-items:center;margin:7px 0;padding:13px 14px;border-radius:10px;
+ text-decoration:none;color:#9da8a2;font-size:14px;font-weight:650;transition:.2s ease
+}
+nav a:hover{background:linear-gradient(90deg,rgba(57,245,138,.12),transparent);color:#fff;transform:translateX(3px)}
+main{padding:34px 38px;max-width:1500px;width:100%;margin:0 auto}
+.top{display:flex;justify-content:space-between;gap:18px;align-items:center;margin-bottom:4px}
+.top h1{margin:7px 0 0;font-size:30px;letter-spacing:-.8px}
+.badge{
+ display:inline-flex;align-items:center;font-size:10px;font-weight:900;letter-spacing:1.4px;
+ padding:6px 9px;border:1px solid #294437;border-radius:999px;color:var(--green);
+ background:rgba(57,245,138,.045)
+}
+.btn{
+ display:inline-flex;align-items:center;justify-content:center;border:1px solid rgba(57,245,138,.28);
+ border-radius:10px;padding:11px 15px;font-weight:850;background:linear-gradient(135deg,#20e878,#38f58a);
+ color:#031008;box-shadow:0 10px 30px rgba(26,235,118,.12);cursor:pointer;text-decoration:none;transition:.2s
+}
+.btn:hover{transform:translateY(-2px);filter:brightness(1.06);box-shadow:0 12px 34px rgba(26,235,118,.2)}
+.btn.secondary{background:#0c120f;color:#e9eeeb;border-color:#26342d;box-shadow:none}
+.btn.danger{background:#241013;color:#ff8d97;border-color:#4b2026;box-shadow:none}
+.btn.small{padding:8px 10px;font-size:12px}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin:25px 0}
+.card,.panel{
+ position:relative;overflow:hidden;
+ background:linear-gradient(145deg,rgba(13,19,16,.96),rgba(6,9,7,.97));
+ border:1px solid #1a2921;border-radius:14px;padding:20px;box-shadow:var(--shadow)
+}
+.card:before,.panel:before{
+ content:"";position:absolute;inset:0 0 auto 0;height:1px;
+ background:linear-gradient(90deg,transparent,rgba(57,245,138,.3),transparent)
+}
+.card{min-height:120px;transition:.22s}
+.card:hover,.panel:hover{border-color:#2b4b39;transform:translateY(-2px)}
+.card label{color:#8c9791;font-size:12px;text-transform:uppercase;letter-spacing:.8px;font-weight:750}
+.value{font-size:28px;font-weight:950;margin-top:10px;letter-spacing:-.8px}
+.up{font-size:11px;color:var(--green);margin-top:8px}
+.grid{display:grid;grid-template-columns:2fr 1fr;gap:15px}
+.panel h3{margin-top:0;font-size:14px;text-transform:uppercase;letter-spacing:.8px;color:#cdd5d0}
+input,select{
+ width:100%;padding:13px;margin:7px 0 14px;border-radius:9px;border:1px solid #223128;
+ background:#050806;color:white;outline:none
+}
+input:focus,select:focus{border-color:#2fcf75;box-shadow:0 0 0 3px rgba(57,245,138,.07)}
+.sale{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid #142019}
+.sale:last-child{border-bottom:0}.sale b{color:var(--green)}
+.goal{height:8px;background:#101712;border-radius:20px;overflow:hidden;margin-top:15px}
+.goal i{display:block;height:100%;background:linear-gradient(90deg,#17c866,#4aff98);box-shadow:0 0 16px rgba(57,245,138,.55)}
+.auth{max-width:430px;margin:8vh auto;padding:30px}
+.auth .logo{text-align:center;margin-bottom:25px}
+.flash{padding:12px 14px;border:1px solid #49312d;background:#211310;border-radius:10px;margin:12px 0}
+.menu-toggle{
+ position:fixed;top:14px;left:14px;width:46px;height:46px;border:1px solid #26382e;border-radius:11px;
+ background:#080d0a;color:#fff;z-index:1002;align-items:center;justify-content:center;flex-direction:column;
+ gap:5px;cursor:pointer;box-shadow:0 10px 30px #0009
+}
+.menu-toggle span{display:block;width:22px;height:2px;background:var(--green);border-radius:3px;transition:.25s}
 .menu-toggle.active span:nth-child(1){transform:translateY(7px) rotate(45deg)}
 .menu-toggle.active span:nth-child(2){opacity:0}
 .menu-toggle.active span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+.menu-overlay{display:none}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.card,.panel{animation:rise .45s ease both}
+.card:nth-child(2){animation-delay:.05s}.card:nth-child(3){animation-delay:.1s}.card:nth-child(4){animation-delay:.15s}
+@media(max-width:900px){
+ .app{display:block}.side{display:block;position:fixed;top:0;left:0;width:275px;height:100vh;overflow-y:auto;
+ transform:translateX(-110%);transition:transform .3s ease;z-index:1001}
+ .side.open{transform:translateX(0)}
+ main{margin-left:0;padding:78px 16px 22px}.cards{grid-template-columns:1fr 1fr}.grid{grid-template-columns:1fr}
+ .menu-toggle{display:flex}
+ .menu-overlay{display:block;position:fixed;inset:0;background:#000b;opacity:0;visibility:hidden;transition:.3s;z-index:1000;backdrop-filter:blur(4px)}
+ .menu-overlay.show{opacity:1;visibility:visible}
+}
+@media(min-width:901px){.menu-toggle,.menu-overlay{display:none!important}}
+@media(max-width:560px){
+ .cards{grid-template-columns:1fr 1fr;gap:10px}.card{padding:16px;min-height:108px}.value{font-size:22px}
+ .top{align-items:flex-start;flex-direction:column}.top h1{font-size:25px}
+ main{padding-left:12px;padding-right:12px}.panel{padding:16px}.sale{align-items:flex-start;flex-direction:column}
+}
+@media(max-width:390px){.cards{grid-template-columns:1fr}}
 </style>
 """
 
 AUTH = """<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{{title}} - Ghost</title>""" + BASE_STYLE + """
-<div class="auth panel"><div class="logo">GHOST</div><h2>{{title}}</h2>
+<div class="auth panel"><div class="logo">GHOST<span>.</span></div><h2>{{title}}</h2>
 {% with ms=get_flashed_messages() %}{% for m in ms %}<div class="flash">{{m}}</div>{% endfor %}{% endwith %}
 <form method="post">
 {% if register %}<label>Nome</label><input name="name" required maxlength="120">{% endif %}
@@ -184,22 +263,22 @@ document.getElementById('quickLogin').onclick=async()=>{
 </script>{% endif %}
 <p class="muted" style="text-align:center">{{bottom|safe}}</p></div></html>"""
 
-DASH = """<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#050b15"><link rel="manifest" href="/manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><title>Ghost</title>""" + BASE_STYLE + """
+DASH = """<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#030504"><link rel="manifest" href="/manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><title>Ghost</title>""" + BASE_STYLE + """
 <button class="menu-toggle" id="menuToggle" type="button" aria-label="Abrir menu"><span></span><span></span><span></span></button>
 <div class="menu-overlay" id="menuOverlay"></div>
-<div class="app"><aside class="side"><div class="logo">GHOST</div><p class="muted">Central de vendas Ghost</p><nav>
+<div class="app"><aside class="side"><div class="logo">GHOST<span>.</span></div><p class="muted">BUSINESS DASHBOARD</p><nav>
 <a href="/">◈ Visão geral</a><a href="/sale/new">＋ Registrar venda</a><a href="/sites">🌐 Sites/Clientes</a><a href="/goal">◎ Alterar meta</a><a href="/integrations">⌁ Integrações</a>{% if is_admin %}<a href="/admin">♛ Administração</a>{% endif %}<a href="/logout">↪ Sair</a></nav></aside>
-<main><div class="top"><div><span class="badge">{% if is_admin %}ADMIN{% else %}USUÁRIO{% endif %}</span><h1>Olá, {{name}} 👋</h1></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn secondary" id="notifyBtn" type="button">🔔 Ativar notificações</button><button class="btn secondary" id="passkeyBtn" type="button">🔐 Ativar Face ID</button><a class="btn" href="/sale/new">+ Registrar venda</a></div></div>
+<main><div class="top"><div><span class="badge">{% if is_admin %}ADMIN{% else %}USUÁRIO{% endif %}</span><h1>Bem-vindo de volta, {{name}}</h1></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn secondary" id="notifyBtn" type="button">🔔 Ativar notificações</button><button class="btn secondary" id="passkeyBtn" type="button">🔐 Ativar Face ID</button><a class="btn" href="/sale/new">+ Registrar venda</a></div></div>
 {% with ms=get_flashed_messages() %}{% for m in ms %}<div class="flash">{{m}}</div>{% endfor %}{% endwith %}
-<section class="cards"><div class="card"><label>Faturamento hoje</label><div class="value">{{today|money}}</div><div class="up">Vendas registradas hoje</div></div>
-<div class="card"><label>Vendas no mês</label><div class="value">{{month_sales|money}}</div><div class="up">Somente vendas reais registradas</div></div>
-<div class="card"><label>Ajustes manuais</label><div class="value">{{adjustments|money}}</div><div class="up">Separado das vendas</div></div>
+<section class="cards"><div class="card"><label>Hoje</label><div class="value">{{today|money}}</div><div class="up">Vendas registradas hoje</div></div>
+<div class="card"><label>Faturamento do mês</label><div class="value">{{month_sales|money}}</div><div class="up">Somente vendas reais registradas</div></div>
+<div class="card"><label>Ajustes</label><div class="value">{{adjustments|money}}</div><div class="up">Separado das vendas</div></div>
 <div class="card"><label>Saldo total</label><div class="value">{{total|money}}</div><div class="up">{{count}} vendas no mês</div></div></section>
-<section class="grid"><div class="panel"><h3>Últimos 7 dias</h3><canvas id="chart" height="115"></canvas></div>
+<section class="grid"><div class="panel"><h3>Faturamento • últimos 7 dias</h3><canvas id="chart" height="115"></canvas></div>
 <div class="panel"><h3>Meta do mês</h3><div class="value">{{month_sales|money}} / {{goal|money}}</div><p class="muted">{{pct}}% concluída</p><div class="goal"><i style="width:{{pct}}%"></i></div></div></section>
-<section class="panel" style="margin-top:16px"><h3>Vendas recentes</h3>{% for s in sales %}<div class="sale"><span>{{s.product}} <small class="muted">• {{s.platform}} • {{s.created_at.strftime('%d/%m %H:%M')}}</small></span><span style="display:flex;align-items:center;gap:9px"><b>+ {{s.amount|money}}</b>{% if is_admin %}<form method="post" action="/admin/sale/{{s.id}}/delete" onsubmit="return confirm('Apagar esta venda? Essa ação não pode ser desfeita.')"><button class="btn danger small" type="submit">🗑 Apagar</button></form>{% endif %}</span></div>{% else %}<p class="muted">Nenhuma venda cadastrada ainda.</p>{% endfor %}</section>
+<section class="panel" style="margin-top:16px"><h3>Atividade recente</h3>{% for s in sales %}<div class="sale"><span>{{s.product}} <small class="muted">• {{s.platform}} • {{s.created_at.strftime('%d/%m %H:%M')}}</small></span><span style="display:flex;align-items:center;gap:9px"><b>+ {{s.amount|money}}</b>{% if is_admin %}<form method="post" action="/admin/sale/{{s.id}}/delete" onsubmit="return confirm('Apagar esta venda? Essa ação não pode ser desfeita.')"><button class="btn danger small" type="submit">🗑 Apagar</button></form>{% endif %}</span></div>{% else %}<p class="muted">Nenhuma venda cadastrada ainda.</p>{% endfor %}</section>
 </main></div><script src="https://cdn.jsdelivr.net/npm/chart.js"></script><script>
-new Chart(document.getElementById('chart'),{type:'line',data:{labels:{{labels|safe}},datasets:[{data:{{values|safe}},borderColor:'#258cff',backgroundColor:'#258cff22',fill:true,tension:.4}]},options:{plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#8e9a98'},grid:{display:false}},y:{ticks:{color:'#8e9a98'},grid:{color:'#102b4a'}}}}});
+new Chart(document.getElementById('chart'),{type:'line',data:{labels:{{labels|safe}},datasets:[{data:{{values|safe}},borderColor:'#39f58a',backgroundColor:'rgba(57,245,138,.08)',fill:true,tension:.4}]},options:{plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#8e9a98'},grid:{display:false}},y:{ticks:{color:'#8e9a98'},grid:{color:'#142019'}}}}});
 document.querySelectorAll('.value').forEach((el,i)=>{el.style.animation=`rise .45s ease ${i*.07}s both`;});
 (function(){
  const btn=document.getElementById('menuToggle'), side=document.querySelector('.side'), overlay=document.getElementById('menuOverlay');
@@ -241,7 +320,7 @@ if(passkeyBtn) passkeyBtn.onclick=async()=>{
 </script></html>"""
 
 FORM = """<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Registrar venda</title>""" + BASE_STYLE + """
-<div class="auth panel"><div class="logo">GHOST</div><h2>Registrar venda</h2>
+<div class="auth panel"><div class="logo">GHOST<span>.</span></div><h2>Registrar venda</h2>
 <form method="post"><label>Produto</label><input name="product" required maxlength="180"><label>Valor (R$)</label><input name="amount" type="number" min="0.01" step="0.01" required>
 <label>Plataforma</label><select name="platform"><option>Cakto</option><option>Mercado Livre</option><option>Shopee</option><option>TikTok Shop</option><option>Outra</option></select>
 <button class="btn" style="width:100%">Salvar venda</button></form><p style="text-align:center"><a href="/">Voltar ao painel</a></p></div></html>"""
@@ -255,7 +334,7 @@ ADMIN = """<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="v
 <div class="panel" style="margin-top:16px"><h3>Usuários</h3>{% for u in users %}<div class="sale"><span>{{u.name}} <small class="muted">• {{u.email}}</small></span><span class="badge">{% if u.is_admin %}ADMIN{% else %}USUÁRIO{% endif %}</span></div>{% endfor %}</div></main></html>"""
 
 GOAL_FORM = """<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Meta mensal</title>""" + BASE_STYLE + """
-<div class="auth panel"><div class="logo">GHOST</div><h2>Meta do mês</h2><p class="muted">Defina sua própria meta mensal. Ela altera a barra de progresso do seu painel.</p>
+<div class="auth panel"><div class="logo">GHOST<span>.</span></div><h2>Meta do mês</h2><p class="muted">Defina sua própria meta mensal. Ela altera a barra de progresso do seu painel.</p>
 <form method="post"><label>Nova meta (R$)</label><input name="goal" type="number" min="1" step="0.01" value="{{goal}}" required>
 <button class="btn" style="width:100%">Salvar meta</button></form><p style="text-align:center"><a href="/">Voltar ao painel</a></p></div></html>"""
 
@@ -282,7 +361,7 @@ SITES = """<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="v
 </section></main></html>"""
 
 SITE_FORM = """<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{{title}} • Ghost</title>""" + BASE_STYLE + """
-<div class="auth panel" style="max-width:720px"><div class="logo">GHOST</div><h2>{{title}}</h2><p class="muted">Cadastre o projeto do cliente. Você poderá editar tudo depois.</p>
+<div class="auth panel" style="max-width:720px"><div class="logo">GHOST<span>.</span></div><h2>{{title}}</h2><p class="muted">Cadastre o projeto do cliente. Você poderá editar tudo depois.</p>
 <form method="post"><label>Cliente</label><input name="client_name" required maxlength="140" value="{{p.client_name if p else ''}}" placeholder="Ex.: Barbearia Central"><label>Projeto / site</label><input name="project_name" required maxlength="180" value="{{p.project_name if p else ''}}" placeholder="Ex.: Site institucional"><label>Valor do projeto (R$)</label><input name="project_value" type="number" min="0" step="0.01" required value="{{p.project_value if p else '0'}}"><label>Domínio ou link</label><input name="domain_url" maxlength="500" value="{{p.domain_url if p and p.domain_url else ''}}" placeholder="https://..."><label>Prazo de entrega</label><input name="deadline" type="date" value="{{p.deadline.isoformat() if p and p.deadline else ''}}"><label>Manutenção mensal (R$)</label><input name="monthly_maintenance" type="number" min="0" step="0.01" value="{{p.monthly_maintenance if p else '0'}}"><label>Status</label><select name="status">{% for s in statuses %}<option value="{{s}}" {% if p and p.status==s %}selected{% endif %}>{{s}}</option>{% endfor %}</select><button class="btn" style="width:100%">{{button}}</button></form><p style="text-align:center"><a href="/sites">Voltar para Sites/Clientes</a></p></div></html>"""
 
 def _rp():
@@ -298,7 +377,7 @@ def _b64d(data):
 
 @app.route("/manifest.webmanifest")
 def manifest():
-    return jsonify({"name":"Ghost","short_name":"Ghost","start_url":"/","display":"standalone","background_color":"#02050a","theme_color":"#050b15"})
+    return jsonify({"name":"Ghost","short_name":"Ghost","start_url":"/","display":"standalone","background_color":"#020302","theme_color":"#030504"})
 
 @app.route("/sw.js")
 def service_worker():
@@ -477,7 +556,7 @@ def new_sale():
         cur.execute("INSERT INTO sales(user_id,product,platform,amount) VALUES(%s,%s,%s,%s)",
                     (session["uid"],request.form["product"].strip(),request.form["platform"],amount))
         conn.commit(); cur.close(); conn.close()
-        send_push_to_user(session["uid"],"💰 Nova venda na Ghost",f"{request.form['product'].strip()} • R$ {amount:,.2f}".replace(",", "X").replace(".", ",").replace("X","."),"/")
+        send_push_to_user(session["uid"],"💰 💰 Nova venda • Ghost",f"{request.form['product'].strip()} • R$ {amount:,.2f}".replace(",", "X").replace(".", ",").replace("X","."),"/")
         flash("Venda registrada com sucesso.")
         return redirect(url_for("dashboard"))
     return render_template_string(FORM)
@@ -553,7 +632,7 @@ def site_edit(project_id):
                 conn2.commit()
             cur2.close(); conn2.close()
             valor = money(v["project_value"])
-            send_push_to_user(uid, "💰 Pagamento confirmado", f'{v["project_name"]} — {valor} • Cliente: {v["client_name"]}', "/sites")
+            send_push_to_user(uid, "💰 Pagamento confirmado • Ghost", f'{v["project_name"]} — {valor} • Cliente: {v["client_name"]}', "/sites")
         flash("Projeto atualizado."); return redirect(url_for("sites"))
     cur.close(); conn.close(); return render_template_string(SITE_FORM,title="Editar site / cliente",button="Salvar alterações",p=p,statuses=SITE_STATUSES)
 
