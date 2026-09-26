@@ -159,8 +159,8 @@ main{margin-left:0;padding:76px 18px 18px}.cards{grid-template-columns:1fr 1fr}.
 </style>
 """
 
-AUTH = """<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{{title}} - Bithfy</title>""" + BASE_STYLE + """
-<div class="auth panel"><div class="logo">Bith<span>fy</span></div><h2>{{title}}</h2>
+AUTH = """<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{{title}} - Ghost</title>""" + BASE_STYLE + """
+<div class="auth panel"><div class="logo">GHOST</div><h2>{{title}}</h2>
 {% with ms=get_flashed_messages() %}{% for m in ms %}<div class="flash">{{m}}</div>{% endfor %}{% endwith %}
 <form method="post">
 {% if register %}<label>Nome</label><input name="name" required maxlength="120">{% endif %}
@@ -184,10 +184,10 @@ document.getElementById('quickLogin').onclick=async()=>{
 </script>{% endif %}
 <p class="muted" style="text-align:center">{{bottom|safe}}</p></div></html>"""
 
-DASH = """<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#050b15"><link rel="manifest" href="/manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><title>Bithfy</title>""" + BASE_STYLE + """
+DASH = """<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#050b15"><link rel="manifest" href="/manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><title>Ghost</title>""" + BASE_STYLE + """
 <button class="menu-toggle" id="menuToggle" type="button" aria-label="Abrir menu"><span></span><span></span><span></span></button>
 <div class="menu-overlay" id="menuOverlay"></div>
-<div class="app"><aside class="side"><div class="logo">Bith<span>fy</span></div><p class="muted">Central de vendas Bithfy</p><nav>
+<div class="app"><aside class="side"><div class="logo">GHOST</div><p class="muted">Central de vendas Ghost</p><nav>
 <a href="/">◈ Visão geral</a><a href="/sale/new">＋ Registrar venda</a><a href="/sites">🌐 Sites/Clientes</a><a href="/goal">◎ Alterar meta</a><a href="/integrations">⌁ Integrações</a>{% if is_admin %}<a href="/admin">♛ Administração</a>{% endif %}<a href="/logout">↪ Sair</a></nav></aside>
 <main><div class="top"><div><span class="badge">{% if is_admin %}ADMIN{% else %}USUÁRIO{% endif %}</span><h1>Olá, {{name}} 👋</h1></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn secondary" id="notifyBtn" type="button">🔔 Ativar notificações</button><button class="btn secondary" id="passkeyBtn" type="button">🔐 Ativar Face ID</button><a class="btn" href="/sale/new">+ Registrar venda</a></div></div>
 {% with ms=get_flashed_messages() %}{% for m in ms %}<div class="flash">{{m}}</div>{% endfor %}{% endwith %}
@@ -241,12 +241,12 @@ if(passkeyBtn) passkeyBtn.onclick=async()=>{
 </script></html>"""
 
 FORM = """<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Registrar venda</title>""" + BASE_STYLE + """
-<div class="auth panel"><div class="logo">Bith<span>fy</span></div><h2>Registrar venda</h2>
+<div class="auth panel"><div class="logo">GHOST</div><h2>Registrar venda</h2>
 <form method="post"><label>Produto</label><input name="product" required maxlength="180"><label>Valor (R$)</label><input name="amount" type="number" min="0.01" step="0.01" required>
 <label>Plataforma</label><select name="platform"><option>Cakto</option><option>Mercado Livre</option><option>Shopee</option><option>TikTok Shop</option><option>Outra</option></select>
 <button class="btn" style="width:100%">Salvar venda</button></form><p style="text-align:center"><a href="/">Voltar ao painel</a></p></div></html>"""
 
-ADMIN = """<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Admin Bithfy</title>""" + BASE_STYLE + """
+ADMIN = """<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Admin Ghost</title>""" + BASE_STYLE + """
 <main style="max-width:900px;margin:auto"><div class="top"><div><span class="badge">ADMIN</span><h1>Administração</h1></div><a class="btn secondary" href="/">Voltar</a></div>
 {% with ms=get_flashed_messages() %}{% for m in ms %}<div class="flash">{{m}}</div>{% endfor %}{% endwith %}
 <div class="panel" style="margin-top:20px"><h3>Adicionar ajuste ao meu saldo</h3><p class="muted">Ajustes ficam identificados e não são contados como venda.</p>
@@ -255,7 +255,7 @@ ADMIN = """<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="v
 <div class="panel" style="margin-top:16px"><h3>Usuários</h3>{% for u in users %}<div class="sale"><span>{{u.name}} <small class="muted">• {{u.email}}</small></span><span class="badge">{% if u.is_admin %}ADMIN{% else %}USUÁRIO{% endif %}</span></div>{% endfor %}</div></main></html>"""
 
 GOAL_FORM = """<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Meta mensal</title>""" + BASE_STYLE + """
-<div class="auth panel"><div class="logo">Bith<span>fy</span></div><h2>Meta do mês</h2><p class="muted">Defina sua própria meta mensal. Ela altera a barra de progresso do seu painel.</p>
+<div class="auth panel"><div class="logo">GHOST</div><h2>Meta do mês</h2><p class="muted">Defina sua própria meta mensal. Ela altera a barra de progresso do seu painel.</p>
 <form method="post"><label>Nova meta (R$)</label><input name="goal" type="number" min="1" step="0.01" value="{{goal}}" required>
 <button class="btn" style="width:100%">Salvar meta</button></form><p style="text-align:center"><a href="/">Voltar ao painel</a></p></div></html>"""
 
@@ -271,7 +271,7 @@ INTEGRATIONS = """<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta 
 
 
 
-SITES = """<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Sites e Clientes • Bithfy</title>""" + BASE_STYLE + """
+SITES = """<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Sites e Clientes • Ghost</title>""" + BASE_STYLE + """
 <main style="max-width:1100px;margin:auto"><div class="top"><div><span class="badge">PROJETOS</span><h1>🌐 Sites / Clientes</h1><p class="muted">Organize clientes, valores, domínios, prazos, manutenção e pagamentos.</p></div><div style="display:flex;gap:8px;flex-wrap:wrap"><a class="btn" href="/sites/new">+ Novo projeto</a><a class="btn secondary" href="/">Voltar</a></div></div>
 {% with ms=get_flashed_messages() %}{% for m in ms %}<div class="flash">{{m}}</div>{% endfor %}{% endwith %}
 <section class="cards"><div class="card"><label>Projetos</label><div class="value">{{count}}</div></div><div class="card"><label>Valor dos projetos</label><div class="value">{{total_value|money}}</div></div><div class="card"><label>Manutenção mensal</label><div class="value">{{maintenance|money}}</div></div><div class="card"><label>Pagos</label><div class="value">{{paid}}</div></div></section>
@@ -281,8 +281,8 @@ SITES = """<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="v
 {% else %}<p class="muted">Nenhum site ou cliente cadastrado ainda.</p>{% endfor %}
 </section></main></html>"""
 
-SITE_FORM = """<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{{title}} • Bithfy</title>""" + BASE_STYLE + """
-<div class="auth panel" style="max-width:720px"><div class="logo">Bith<span>fy</span></div><h2>{{title}}</h2><p class="muted">Cadastre o projeto do cliente. Você poderá editar tudo depois.</p>
+SITE_FORM = """<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{{title}} • Ghost</title>""" + BASE_STYLE + """
+<div class="auth panel" style="max-width:720px"><div class="logo">GHOST</div><h2>{{title}}</h2><p class="muted">Cadastre o projeto do cliente. Você poderá editar tudo depois.</p>
 <form method="post"><label>Cliente</label><input name="client_name" required maxlength="140" value="{{p.client_name if p else ''}}" placeholder="Ex.: Barbearia Central"><label>Projeto / site</label><input name="project_name" required maxlength="180" value="{{p.project_name if p else ''}}" placeholder="Ex.: Site institucional"><label>Valor do projeto (R$)</label><input name="project_value" type="number" min="0" step="0.01" required value="{{p.project_value if p else '0'}}"><label>Domínio ou link</label><input name="domain_url" maxlength="500" value="{{p.domain_url if p and p.domain_url else ''}}" placeholder="https://..."><label>Prazo de entrega</label><input name="deadline" type="date" value="{{p.deadline.isoformat() if p and p.deadline else ''}}"><label>Manutenção mensal (R$)</label><input name="monthly_maintenance" type="number" min="0" step="0.01" value="{{p.monthly_maintenance if p else '0'}}"><label>Status</label><select name="status">{% for s in statuses %}<option value="{{s}}" {% if p and p.status==s %}selected{% endif %}>{{s}}</option>{% endfor %}</select><button class="btn" style="width:100%">{{button}}</button></form><p style="text-align:center"><a href="/sites">Voltar para Sites/Clientes</a></p></div></html>"""
 
 def _rp():
@@ -298,11 +298,11 @@ def _b64d(data):
 
 @app.route("/manifest.webmanifest")
 def manifest():
-    return jsonify({"name":"Bithfy","short_name":"Bithfy","start_url":"/","display":"standalone","background_color":"#02050a","theme_color":"#050b15"})
+    return jsonify({"name":"Ghost","short_name":"Ghost","start_url":"/","display":"standalone","background_color":"#02050a","theme_color":"#050b15"})
 
 @app.route("/sw.js")
 def service_worker():
-    js = """self.addEventListener('push',e=>{let d={};try{d=e.data.json()}catch(x){d={title:'Bithfy',body:e.data?e.data.text():'Nova atualização'}};e.waitUntil(self.registration.showNotification(d.title||'Bithfy',{body:d.body||'',data:{url:d.url||'/'}}))});self.addEventListener('notificationclick',e=>{e.notification.close();e.waitUntil(clients.matchAll({type:'window',includeUncontrolled:true}).then(ws=>{for(const w of ws){if('focus'in w){w.navigate(e.notification.data.url||'/');return w.focus()}}return clients.openWindow(e.notification.data.url||'/')}))});"""
+    js = """self.addEventListener('push',e=>{let d={};try{d=e.data.json()}catch(x){d={title:'Ghost',body:e.data?e.data.text():'Nova atualização'}};e.waitUntil(self.registration.showNotification(d.title||'Ghost',{body:d.body||'',data:{url:d.url||'/'}}))});self.addEventListener('notificationclick',e=>{e.notification.close();e.waitUntil(clients.matchAll({type:'window',includeUncontrolled:true}).then(ws=>{for(const w of ws){if('focus'in w){w.navigate(e.notification.data.url||'/');return w.focus()}}return clients.openWindow(e.notification.data.url||'/')}))});"""
     return Response(js,mimetype="application/javascript")
 
 @app.route("/push/public-key")
@@ -344,7 +344,7 @@ def passkey_register_options():
     cur.execute("SELECT credential_id FROM passkeys WHERE user_id=%s",(session["uid"],));existing=cur.fetchall()
     cur.close();conn.close();rp_id,_=_rp()
     opts=generate_registration_options(
-        rp_id=rp_id,rp_name="Bithfy",user_id=str(u["id"]).encode(),user_name=u["email"],user_display_name=u["name"],
+        rp_id=rp_id,rp_name="Ghost",user_id=str(u["id"]).encode(),user_name=u["email"],user_display_name=u["name"],
         exclude_credentials=[PublicKeyCredentialDescriptor(id=_b64d(x["credential_id"])) for x in existing],
         authenticator_selection=AuthenticatorSelectionCriteria(resident_key=ResidentKeyRequirement.PREFERRED,user_verification=UserVerificationRequirement.REQUIRED)
     )
@@ -477,7 +477,7 @@ def new_sale():
         cur.execute("INSERT INTO sales(user_id,product,platform,amount) VALUES(%s,%s,%s,%s)",
                     (session["uid"],request.form["product"].strip(),request.form["platform"],amount))
         conn.commit(); cur.close(); conn.close()
-        send_push_to_user(session["uid"],"💰 Nova venda na Bithfy",f"{request.form['product'].strip()} • R$ {amount:,.2f}".replace(",", "X").replace(".", ",").replace("X","."),"/")
+        send_push_to_user(session["uid"],"💰 Nova venda na Ghost",f"{request.form['product'].strip()} • R$ {amount:,.2f}".replace(",", "X").replace(".", ",").replace("X","."),"/")
         flash("Venda registrada com sucesso.")
         return redirect(url_for("dashboard"))
     return render_template_string(FORM)
